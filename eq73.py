@@ -53,8 +53,8 @@ def eq_73(omega, k_x, k_y, run):
     # The denominator natively includes lambda_D_sq but no k^2 in the numerator, 
     # effectively evaluating the unnormalized ion susceptibility (chi_i)
     chi_i_part1 = V_Tn**2 / (lambda_D_sq * beta_T * den1)
-    part2 = 1.0 / (1.0 + (1j * nu_i[run] / sqrt_den1) * Z_tilde(z1, omega_i))
-    part3 = 1.0 + ((omega_i - k_dot_U0) / sqrt_den2) * Z_tilde(z2, omega_i)
+    part2 = 1.0 / (1.0 + (1j * nu_i[run] / sqrt_den1) * Z_tilde(z1))
+    part3 = 1.0 + ((omega_i - k_dot_U0) / sqrt_den2) * Z_tilde(z2)
     
     chi_i = chi_i_part1 * part2 * part3
 
@@ -78,7 +78,6 @@ if __name__ == "__main__":
             kx_vals,
             ky_vals,
             alt_eff[i],
-            pts,
             run=i,
             positive_only=False,
         )

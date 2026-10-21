@@ -343,48 +343,32 @@ def plot_branch_diagnostics(results, run):
     for row, (name, direction, data) in enumerate(results):
         k = data["k"]
         omega = data["omega"]
-        highest = data["highest"]
 
         ax = axes[row, 0]
-        ax.plot(k, omega.real, label="Tracked branch")
-        ax.plot(
-            k,
-            highest.real,
-            "--",
-            alpha=0.75,
-            label="Highest-growth candidate",
-        )
+        ax.plot(k, omega.real)
         ax.set_ylabel(f"{name}\nRe(ω) [rad/s]")
         ax.set_title("Real frequency")
-        ax.legend(fontsize=8)
 
         ax = axes[row, 1]
-        ax.plot(k, omega.imag, label="Tracked branch")
-        ax.plot(
-            k,
-            highest.imag,
-            "--",
-            alpha=0.75,
-            label="Highest growth found",
-        )
+        ax.plot(k, omega.imag)
         ax.axhline(0, color="black", lw=0.8)
 
         suspicious = (
             data["predictor_error"] > JUMP_WARNING
         ) & (np.arange(len(k)) > 0)
 
-        ax.scatter(
-            k[suspicious],
-            omega.imag[suspicious],
-            color="red",
-            marker="x",
-            label="Large predictor error",
-            zorder=5,
-        )
+        if np.any(suspicious):
+            ax.scatter(
+                k[suspicious],
+                omega.imag[suspicious],
+                color="red",
+                marker="x",
+                label="Large predictor error",
+                zorder=5,
+            )
 
         ax.set_ylabel("Im(ω) [s⁻¹]")
         ax.set_title("Growth / damping")
-        ax.legend(fontsize=8)
 
         # Show only the small-k portion for scaling checks.
         small = k <= min(0.8, k[-1])
@@ -396,7 +380,7 @@ def plot_branch_diagnostics(results, run):
             "o-",
         )
         ax.set_ylabel("Re(ω) / k [m/s]")
-        ax.set_title("Small-k phase-speed check")
+        ax.set_title("Small-k phase-speed")
 
         ax = axes[row, 3]
         ax.semilogx(
@@ -406,16 +390,12 @@ def plot_branch_diagnostics(results, run):
         )
         ax.axhline(0, color="black", lw=0.8)
         ax.set_ylabel("Im(ω) / k² [m²/s]")
-        ax.set_title("Small-k growth-scaling check")
+        ax.set_title("Small-k growth-scaling")
 
         for ax in axes[row]:
             ax.set_xlabel("|k| [m⁻¹]")
             ax.grid(alpha=0.25)
 
-    fig.suptitle(
-        f"Eq. 73 branch diagnostics — {C.alt_eff[run]:g} km",
-        fontsize=15,
-    )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
 
 
@@ -457,9 +437,6 @@ def plot_frequency_ratios(results, run):
         ax.grid(alpha=0.25, which="both")
         ax.legend(fontsize=8)
 
-    fig.suptitle(
-        "Frequency ordering diagnostics — not automatic pass/fail tests"
-    )
     fig.tight_layout()
 
 
@@ -469,19 +446,15 @@ def plot_frequency_ratios(results, run):
 
 def main():
     ve, ui = equilibrium_drifts(RUN)
-    relative = ve - ui
-    relative_direction = relative / np.linalg.norm(relative)
 
     directions = [
         ("x direction", np.array([1.0, 0.0])),
         ("y direction", np.array([0.0, 1.0])),
-        ("relative drift", relative_direction),
     ]
 
     print(f"Altitude: {C.alt_eff[RUN]:g} km")
     print(f"Electron drift: {ve} m/s")
     print(f"Ion drift:      {ui} m/s")
-    print(f"Relative drift: {relative} m/s")
     print(f"Ion collisions:      {C.nu_i[RUN]:.6g} s^-1")
     print(f"Electron collisions: {C.nu_e[RUN]:.6g} s^-1")
 
@@ -504,9 +477,9 @@ def main():
         results.append((name, direction, data))
 
     plot_branch_diagnostics(results, RUN)
-    plt.savefig("diagnostics")
+    plt.savefig("diagnostics_104")
     plot_frequency_ratios(results, RUN)
-    plt.savefig("frequency_ratios")
+    plt.savefig("frequency_ratios_104")
     plt.show()
 
 

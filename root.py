@@ -9,15 +9,7 @@ from scipy.special import wofz
 from constants import *
 
 
-def Z_tilde(z, omega_i=None):
-    """
-    ASSUMPTION: Z_tilde is the standard plasma dispersion function.
-
-        Z(z) = i * sqrt(pi) * wofz(z)
-
-    omega_i is accepted for compatibility with eq73.py, but is not used.
-    Replace this function if your model defines a modified Z_tilde.
-    """
+def Z_tilde(z):
     with np.errstate(over="ignore", invalid="ignore"):
         return 1j * np.sqrt(np.pi) * wofz(z)
 
@@ -211,7 +203,6 @@ def contour_plot(
     kx_vals,
     ky_vals,
     altitude,
-    pts=None,
     run=0,
     positive_only=True,
 ):
@@ -220,8 +211,6 @@ def contour_plot(
 
     Assumes perturbations vary as exp(i*k·r - i*omega*t), so Im(omega) > 0
     indicates growth.
-
-    pts is accepted for compatibility with your existing eq73.py.
     """
     kx_vals = np.asarray(kx_vals, dtype=float)
     ky_vals = np.asarray(ky_vals, dtype=float)
