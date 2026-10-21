@@ -10,7 +10,7 @@ def eq_70(omega, k_x, k_y, run):
     U0_x_curr = 0
     U0_y_curr = U0_mag_curr
 
-    T_eff_i_curr = m_i * (2*V_Tx**2 + V_Ty**2) / 3.0
+    T_eff_i_curr = T_n + (m_i * U0_mag_curr**2) / 3.0
 
     T_y_curr = (3.0 * T_eff_i_curr) / (1.0 + 2.0 * anisotropy_ratio)
     T_x_curr = anisotropy_ratio * T_y_curr
@@ -59,18 +59,19 @@ def eq_70(omega, k_x, k_y, run):
     chi_i = chi_i_part1 * part2 * part3
 
     # --- NUMERICALLY SCALED DISPERSION RELATION ---
-    # The true Poisson sum is 1 + chi_e + chi_i = 0.
+    # The true Poisson sum is 1 + chi_e - chi_i = 0 (chi_i must be subtracted to
+    # cancel against chi_e in the k->0 fluid limit -- verified in eq70_dispersion_sign_convention.md).
     # Multiplying by (k^2 * lambda_D^2) brings all extremely large susceptibility 
     # terms down to O(1), allowing the Newton solver to converge smoothly.
     scaling_factor = k_sq * lambda_D_sq
     
-    return scaling_factor * (1.0 + chi_e + chi_i)
+    return scaling_factor * (1.0 + chi_e - chi_i)
 
 if __name__ == "__main__":
     for i in [4, 5]:
         pts = 100
-        kx_vals = np.linspace(-2, 2, pts)
-        ky_vals = np.linspace(-2, 2, pts)
+        kx_vals = np.linspace(-15, 15, pts)
+        ky_vals = np.linspace(-25, 25, pts)
 
         contour_plot(
             lambda omega, kx, ky, run=i: eq_70(omega, kx, ky, run),

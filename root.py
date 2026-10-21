@@ -90,59 +90,75 @@ def custom_newton_raphson_2d(
     return omega_n
 
 def contour_plot(func, kx_vals, ky_vals, name, pts, run=None, custom_levels=None, positive_only=False):
-    growth_rate_2d = np.zeros((len(ky_vals), len(kx_vals)))
-    root_2d = np.zeros((len(ky_vals), len(kx_vals)), dtype=np.complex128)
-
-    center_j = np.argmin(np.abs(kx_vals))
-
-    for i, ky in enumerate(ky_vals):
-        if i % 10 == 0:
-            print(f"Row progress: {i}/{len(ky_vals)}")
-
-        j_order = list(range(center_j, len(kx_vals))) + list(range(center_j - 1, -1, -1))
-
-        for j in j_order:
-            kx = kx_vals[j]
-            k_mag = np.hypot(kx, ky)
-
-            fluid_r1, fluid_r2 = fluid_seed_pair_2d(kx, ky, run)
-            ref_r1, ref_r2 = fluid_seed_pair_2d(k_mag, 0.0, run)
-            seeds = [fluid_r1, fluid_r2, ref_r1, ref_r2]
-
-            if i > 0:
-                seeds.append(root_2d[i - 1, j])
-            if j > 0 and root_2d[i, j - 1] != 0j:
-                seeds.append(root_2d[i, j - 1])
-            if j < len(kx_vals) - 1 and root_2d[i, j + 1] != 0j:
-                seeds.append(root_2d[i, j + 1])
-            if i > 0 and j > 0 and root_2d[i - 1, j - 1] != 0j:
-                seeds.append(root_2d[i - 1, j - 1])
-
-            valid_roots = []
-
-            for seed in seeds:
-                root = custom_newton_raphson_2d(
-                    func=lambda omega, kx, ky: func(omega, kx, ky),
-                    initial_guess=seed,
-                    kx=kx,
-                    ky=ky,
-                    max_iter=NR_MAX_ITER,
-                    max_backtrack=NR_MAX_BACKTRACK,
-                )
-
-                if np.isfinite(root.real) and np.isfinite(root.imag):
-                    if abs(func(root, kx, ky)) < 1e-3:
-                        valid_roots.append(root)
-
-            if valid_roots:
-                best_root = max(valid_roots, key=lambda r: np.imag(r))
-            else:
-                best_root = 0j
-
-            root_2d[i, j] = best_root
-            growth_rate_2d[i, j] = np.imag(best_root)
-
     KX, KY = np.meshgrid(kx_vals, ky_vals)
+    ny, nx = KX.shape
+    growth_rate_2d = np.zeros((ny, nx))
+    root_2d = np.zeros((ny, nx), dtype=np.complex128)
+    solved = np.zeros((ny, nx), dtype=bool)
+
+    # Process points in order of increasing |k| so continuation only ever
+    # extrapolates a short distance from the known-correct k=0 fluid limit,
+    # instead of carrying in whatever root was first found at the domain edge.
+    order = np.argsort(np.hypot(KX, KY).ravel())
+    total = len(order)
+
+    for count, flat_idx in enumerate(order):
+        if count % 500 == 0:
+            print(f"Point progress: {count}/{total}")
+
+        i, j = np.unravel_index(flat_idx, KX.shape)
+        kx, ky = KX[i, j], KY[i, j]
+
+        fluid_r1, fluid_r2 = fluid_seed_pair_2d(kx, ky, run)
+        seeds = [fluid_r1, fluid_r2]
+
+        # Seed continuation only from already-solved 8-connected neighbors
+        # (no more "reference at (k_mag,0)" seeds -- those belong to a
+        # different (kx,ky) location's fluid solution and can converge to a
+        # spurious, unrelated root even at very small |k|).
+        neighbors = []
+        for di in (-1, 0, 1):
+            for dj in (-1, 0, 1):
+                if di == 0 and dj == 0:
+                    continue
+                ni, nj = i + di, j + dj
+                if 0 <= ni < ny and 0 <= nj < nx and solved[ni, nj]:
+                    dist = np.hypot(KX[ni, nj] - kx, KY[ni, nj] - ky)
+                    neighbors.append((dist, root_2d[ni, nj]))
+
+        seeds.extend(r for _, r in neighbors)
+
+        valid_roots = []
+        for seed in seeds:
+            root = custom_newton_raphson_2d(
+                func=lambda omega, kx, ky: func(omega, kx, ky),
+                initial_guess=seed,
+                kx=kx,
+                ky=ky,
+                max_iter=NR_MAX_ITER,
+                max_backtrack=NR_MAX_BACKTRACK,
+            )
+
+            if np.isfinite(root.real) and np.isfinite(root.imag):
+                if abs(func(root, kx, ky)) < 1e-3:
+                    valid_roots.append(root)
+
+        if valid_roots:
+            if neighbors:
+                # Anchor on the nearest (by physical kx,ky distance) already-solved
+                # neighbor to stay on the same branch instead of jumping to a
+                # faster-growing but unrelated root.
+                anchor_root = min(neighbors, key=lambda t: t[0])[1]
+                best_root = min(valid_roots, key=lambda r: abs(r - anchor_root))
+            else:
+                best_root = max(valid_roots, key=lambda r: np.imag(r))
+        else:
+            best_root = 0j
+
+        root_2d[i, j] = best_root
+        growth_rate_2d[i, j] = np.imag(best_root)
+        solved[i, j] = True
+
     growth_rate_data = np.column_stack((KX.ravel(), KY.ravel(), growth_rate_2d.ravel()))
     #np.savetxt(os.path.join(CSV_DIR, f"{name}_growth_rates.csv"), growth_rate_data, delimiter=",", header="kx,ky,growth_rate", comments="")
     #np.savetxt(os.path.join(CSV_DIR, f"{name}_a0_zero_growth_rates.csv"), growth_rate_data, delimiter=",", header="kx,ky,growth_rate", comments="")
