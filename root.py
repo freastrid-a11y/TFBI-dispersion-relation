@@ -1,194 +1,302 @@
-import os
-import matplotlib.pyplot as plt
-from scipy.special import wofz
 import numpy as np
+import matplotlib.pyplot as plt
+
+from scipy.optimize import root
+from scipy.special import wofz
+
+# Exposes the constants to eq73.py through its existing:
+#     from root import *
 from constants import *
 
-PLOTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plots")
-CSV_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csv")
-os.makedirs(PLOTS_DIR, exist_ok=True)
-os.makedirs(CSV_DIR, exist_ok=True)
 
-def fluid_seed_pair_2d(k_x, k_y, run=None):
-    """Return both fluid-branch roots to seed Newton near both dispersion branches."""
+def Z_tilde(z, omega_i=None):
+    """
+    ASSUMPTION: Z_tilde is the standard plasma dispersion function.
 
-    k_sq = k_x**2 + k_y**2
-    a = 1.0
-    b = 1j * nu_i[run] + 1j * (m_e / m_i) * nu_e[run] * (1 + kappa[run]**2)
-    c = -C_s_squared * k_sq - 1j * V_d * Omega_i * (kappa[run] * k_x - k_y)
-    disc = np.sqrt(b**2 - 4 * a * c)
-    return ((-b + disc) / (2 * a), (-b - disc) / (2 * a))
+        Z(z) = i * sqrt(pi) * wofz(z)
 
-def numerical_derivative_2d(func, omega, kx, ky, rel_step=1e-7, min_step=1e-8):
-    """Adaptive central difference derivative for 2D complex-valued root finding."""
-    scale = max(1.0, abs(omega))
-    h = max(min_step, rel_step * scale)
-    f_plus = func(omega + h, kx, ky)
-    f_minus = func(omega - h, kx, ky)
-    return (f_plus - f_minus) / (2 * h)
-
-def Z(z):
-    return 1j * np.sqrt(np.pi) * wofz(z)
-
-def Z_prime(beta):
-    # Asymptotic derivative of Z(beta): Z'(beta) ~ 1/beta^2 + 3/(2 beta^4) + 15/(4 beta^6)
-    if abs(beta) > 40:
-        return (1.0 / beta**2) + (3.0 / (2.0 * beta**4)) + (15.0 / (4.0 * beta**6))
-
-    z_beta = Z(beta)
+    omega_i is accepted for compatibility with eq73.py, but is not used.
+    Replace this function if your model defines a modified Z_tilde.
+    """
     with np.errstate(over="ignore", invalid="ignore"):
-        zp = -2.0 * (1.0 + beta * z_beta)
-    return zp
+        return 1j * np.sqrt(np.pi) * wofz(z)
 
-def Z_tilde(z, omega_i):
-    if np.imag(omega_i) > 0:
-        return Z(z)
-    elif np.imag(omega_i) < 0:
-        return -Z(-z)
-    return complex(np.nan, np.nan)
 
-def Z_prime_tilde(z, omega_i):
-    if np.imag(omega_i) > 0:
-        return Z_prime(z)
-    elif np.imag(omega_i) < 0:
-        return Z_prime(-z)
-    return complex(np.nan, np.nan)
+def frequency_scale(k_x, k_y, run):
+    """Characteristic frequency used to nondimensionalize omega."""
+    k_mag = np.hypot(k_x, k_y)
 
-def custom_newton_raphson_2d(
-    func, initial_guess, kx, ky, tol_step=1e-8, tol_residual=1e-6, max_iter=250, max_backtrack=12,
-    trust_region_scale=2.0,
+    return float(max(
+        1.0,
+        nu_i[run],
+        k_mag * abs(V_d),
+        k_mag * V_Tx[run],
+        k_mag * V_Ty[run],
+    ))
+
+
+def default_guesses(k_x, k_y, run, scale):
+    """Initial guesses spanning several phase velocities and growth rates."""
+    V_de_x = V_d * kappa_e[run]**2 / (1.0 + kappa_e[run]**2)
+    V_de_y = -V_d * kappa_e[run] / (1.0 + kappa_e[run]**2)
+
+    omega_e_drift = k_x * V_de_x + k_y * V_de_y
+    omega_i_drift = k_y * U0_y[run]
+
+    # Approximate low-frequency drift-wave phase frequency.
+    omega_drift = (
+        omega_e_drift + Psi_0[run] * omega_i_drift
+    ) / (1.0 + Psi_0[run])
+
+    real_guesses = np.unique([
+        0.0,
+        omega_drift,
+        omega_e_drift,
+        omega_i_drift,
+        -0.5 * scale,
+        0.5 * scale,
+    ])
+
+    imag_guesses = [
+        0.05 * scale,
+        -0.05 * scale,
+        -0.5 * scale,
+    ]
+
+    return [
+        complex(wr, wi)
+        for wr in real_guesses
+        for wi in imag_guesses
+    ]
+
+
+def find_roots(
+    dispersion,
+    k_x,
+    k_y,
+    run,
+    guesses=None,
+    include_default_guesses=True,
+    residual_tol=1e-8,
+    correction_tol=1e-6,
+    max_frequency_factor=30.0,
 ):
-    omega_n = initial_guess
-    for _ in range(max_iter):
-        f_val = func(omega_n, kx, ky)
-        residual = abs(f_val)
-        if residual < tol_residual:
-            return omega_n
-        df_val = numerical_derivative_2d(func, omega_n, kx, ky)
-        if abs(df_val) < 1e-14:
-            break
-        step = -f_val / df_val
-        # Trust-region cap: a near-degenerate Jacobian can otherwise fling the
-        # step onto an unrelated, distant root and lose track of the seeded branch.
-        max_step = trust_region_scale * max(abs(omega_n), 1.0)
-        if abs(step) > max_step:
-            step *= max_step / abs(step)
-        alpha = 1.0
-        accepted = False
-        for _ in range(max_backtrack):
-            omega_trial = omega_n + alpha * step
-            f_trial = func(omega_trial, kx, ky)
-            if abs(f_trial) < residual:
-                accepted = True
-                break
-            alpha *= 0.5
-        if not accepted:
-            break
-        if abs(alpha * step) < tol_step * (1 + abs(omega_trial)):
-            return omega_trial
-        omega_n = omega_trial
-    return omega_n
+    """
+    Find candidate roots of dispersion(omega, k_x, k_y, run) = 0.
 
-def contour_plot(func, kx_vals, ky_vals, name, pts, run=None, custom_levels=None, positive_only=False):
-    KX, KY = np.meshgrid(kx_vals, ky_vals)
-    ny, nx = KX.shape
-    growth_rate_2d = np.zeros((ny, nx))
-    root_2d = np.zeros((ny, nx), dtype=np.complex128)
-    solved = np.zeros((ny, nx), dtype=bool)
+    Returns
+    -------
+    list of complex
+        Distinct accepted roots, sorted by decreasing imaginary part.
 
-    # Process points in order of increasing |k| so continuation only ever
-    # extrapolates a short distance from the known-correct k=0 fluid limit,
-    # instead of carrying in whatever root was first found at the domain edge.
-    order = np.argsort(np.hypot(KX, KY).ravel())
-    total = len(order)
+    Notes
+    -----
+    This is a local, multistart solver, not a proof that all roots were found.
+    max_frequency_factor restricts accepted roots to the searched frequency
+    range and helps reject spurious convergence at extremely large |omega|.
+    """
+    if k_x == 0.0 and k_y == 0.0:
+        # The equation regularizes k^2, but den2 still vanishes at k = 0.
+        return []
 
-    for count, flat_idx in enumerate(order):
-        if count % 500 == 0:
-            print(f"Point progress: {count}/{total}")
+    scale = frequency_scale(k_x, k_y, run)
 
-        i, j = np.unravel_index(flat_idx, KX.shape)
-        kx, ky = KX[i, j], KY[i, j]
+    seeds = [] if guesses is None else list(guesses)
 
-        fluid_r1, fluid_r2 = fluid_seed_pair_2d(kx, ky, run)
-        seeds = [fluid_r1, fluid_r2]
+    if include_default_guesses:
+        seeds.extend(default_guesses(k_x, k_y, run, scale))
 
-        # Seed continuation only from already-solved 8-connected neighbors
-        # (no more "reference at (k_mag,0)" seeds -- those belong to a
-        # different (kx,ky) location's fluid solution and can converge to a
-        # spurious, unrelated root even at very small |k|).
-        neighbors = []
-        for di in (-1, 0, 1):
-            for dj in (-1, 0, 1):
-                if di == 0 and dj == 0:
-                    continue
-                ni, nj = i + di, j + dj
-                if 0 <= ni < ny and 0 <= nj < nx and solved[ni, nj]:
-                    dist = np.hypot(KX[ni, nj] - kx, KY[ni, nj] - ky)
-                    neighbors.append((dist, root_2d[ni, nj]))
+    if not seeds:
+        seeds = default_guesses(k_x, k_y, run, scale)
 
-        seeds.extend(r for _, r in neighbors)
+    # eq_73 already multiplies its Poisson sum by k^2 * lambda_D_sq.
+    # Use an additional FIXED normalization so the solver tolerance remains
+    # meaningful across different k values.
+    k_sq = max(k_x**2 + k_y**2, 1e-12)
 
-        valid_roots = []
-        for seed in seeds:
-            root = custom_newton_raphson_2d(
-                func=lambda omega, kx, ky: func(omega, kx, ky),
-                initial_guess=seed,
-                kx=kx,
-                ky=ky,
-                max_iter=NR_MAX_ITER,
-                max_backtrack=NR_MAX_BACKTRACK,
+    electron_reference = omega_pe_squared / (
+        nu_e[run] * (1.0 + kappa_e[run]**2) * scale
+    )
+
+    residual_scale = (
+        k_sq * lambda_D_sq * max(1.0, electron_reference)
+    )
+
+    def evaluate(omega):
+        with np.errstate(
+            over="ignore",
+            divide="ignore",
+            invalid="ignore",
+            under="ignore",
+        ):
+            value = dispersion(omega, k_x, k_y, run)
+
+        return complex(value) / residual_scale
+
+    def residual(x):
+        omega = scale * complex(x[0], x[1])
+        value = evaluate(omega)
+
+        if not np.isfinite(value):
+            # Keep invalid special-function evaluations out of the solver.
+            return np.array([1e20, 1e20])
+
+        return np.array([value.real, value.imag])
+
+    accepted = []
+
+    for guess in seeds:
+        if not np.isfinite(guess):
+            continue
+
+        x0 = np.array([guess.real, guess.imag]) / scale
+
+        try:
+            solution = root(
+                residual,
+                x0,
+                method="hybr",
+                options={
+                    "xtol": 1e-10,
+                    "maxfev": 600,
+                },
+            )
+        except (ValueError, FloatingPointError, OverflowError):
+            continue
+
+        omega = scale * complex(solution.x[0], solution.x[1])
+
+        if not np.isfinite(omega):
+            continue
+
+        if abs(omega) > max_frequency_factor * scale:
+            continue
+
+        value = evaluate(omega)
+
+        # Independently check the residual; solver status alone is insufficient.
+        if not np.isfinite(value) or abs(value) > residual_tol:
+            continue
+
+        # Check the estimated remaining Newton correction as well.
+        # This helps reject a small residual caused by a nearly flat function.
+        h = 1e-5 * scale
+        derivative = (
+            evaluate(omega + h) - evaluate(omega - h)
+        ) / (2.0 * h)
+
+        if not np.isfinite(derivative) or abs(derivative) == 0.0:
+            continue
+
+        correction = abs(value / derivative)
+
+        if correction > correction_tol * scale:
+            continue
+
+        # Merge roots reached from different initial guesses.
+        duplicate = any(
+            abs(omega - previous)
+            <= 1e-5 * max(scale, abs(omega), abs(previous))
+            for previous in accepted
+        )
+
+        if not duplicate:
+            accepted.append(omega)
+
+    return sorted(accepted, key=lambda w: w.imag, reverse=True)
+
+
+def contour_plot(
+    dispersion,
+    kx_vals,
+    ky_vals,
+    altitude,
+    pts=None,
+    run=0,
+    positive_only=True,
+):
+    """
+    Plot the largest growth rate found at each wave-vector grid point.
+
+    Assumes perturbations vary as exp(i*k·r - i*omega*t), so Im(omega) > 0
+    indicates growth.
+
+    pts is accepted for compatibility with your existing eq73.py.
+    """
+    kx_vals = np.asarray(kx_vals, dtype=float)
+    ky_vals = np.asarray(ky_vals, dtype=float)
+
+    shape = (len(ky_vals), len(kx_vals))
+    omega_grid = np.full(shape, np.nan + 1j * np.nan, dtype=complex)
+
+    for iy, ky in enumerate(ky_vals):
+        for ix, kx in enumerate(kx_vals):
+            continuation_seeds = []
+
+            # Seed from previously solved neighboring points.
+            if ix > 0 and np.isfinite(omega_grid[iy, ix - 1]):
+                continuation_seeds.append(omega_grid[iy, ix - 1])
+
+            if iy > 0 and np.isfinite(omega_grid[iy - 1, ix]):
+                continuation_seeds.append(omega_grid[iy - 1, ix])
+
+            roots = find_roots(
+                dispersion,
+                kx,
+                ky,
+                run,
+                guesses=continuation_seeds,
+                include_default_guesses=True,
             )
 
-            if np.isfinite(root.real) and np.isfinite(root.imag):
-                if abs(func(root, kx, ky)) < 1e-3:
-                    valid_roots.append(root)
+            if roots:
+                omega_grid[iy, ix] = roots[0]
 
-        if valid_roots:
-            if neighbors:
-                # Anchor on the nearest (by physical kx,ky distance) already-solved
-                # neighbor to stay on the same branch instead of jumping to a
-                # faster-growing but unrelated root.
-                anchor_root = min(neighbors, key=lambda t: t[0])[1]
-                best_root = min(valid_roots, key=lambda r: abs(r - anchor_root))
-            else:
-                best_root = max(valid_roots, key=lambda r: np.imag(r))
-        else:
-            best_root = 0j
+        print(
+            f"Altitude {altitude:g} km: "
+            f"row {iy + 1}/{len(ky_vals)}"
+        )
 
-        root_2d[i, j] = best_root
-        growth_rate_2d[i, j] = np.imag(best_root)
-        solved[i, j] = True
+    growth = omega_grid.imag.copy()
 
-    growth_rate_data = np.column_stack((KX.ravel(), KY.ravel(), growth_rate_2d.ravel()))
-    #np.savetxt(os.path.join(CSV_DIR, f"{name}_growth_rates.csv"), growth_rate_data, delimiter=",", header="kx,ky,growth_rate", comments="")
-    #np.savetxt(os.path.join(CSV_DIR, f"{name}_a0_zero_growth_rates.csv"), growth_rate_data, delimiter=",", header="kx,ky,growth_rate", comments="")
+    if positive_only:
+        growth[growth <= 0.0] = np.nan
+
+    growth = np.ma.masked_invalid(growth)
 
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    if positive_only:
-        growth_rate_2d = np.where(growth_rate_2d <= 0, np.nan, growth_rate_2d)
-        if custom_levels is not None:
-            levels = custom_levels
-        else:
-            hi = np.nanmax(growth_rate_2d) if np.nanmax(growth_rate_2d) > 0 else 8000
-            levels = np.linspace(0, hi, 60)
-        cp1 = ax.contourf(KX, KY, growth_rate_2d, levels=levels, cmap='viridis', extend='max')
+    if growth.count() == 0:
+        ax.text(
+            0.5,
+            0.5,
+            "No accepted unstable roots found"
+            if positive_only else "No accepted roots found",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+        )
     else:
-        # Same rendering convention as eq 2.46: show negative growth too, fixed-or-auto levels, extend both ends.
-        if custom_levels is not None:
-            levels = custom_levels
-        else:
-            lo = min(0.0, growth_rate_2d.min())
-            hi = growth_rate_2d.max() if growth_rate_2d.max() > 0 else 8000
-            levels = np.linspace(lo, hi, 60)
-        cp1 = ax.contourf(KX, KY, growth_rate_2d, levels=levels, cmap='viridis', extend='both')
+        mesh = ax.pcolormesh(
+            kx_vals,
+            ky_vals,
+            growth,
+            shading="auto",
+            cmap="viridis",
+        )
 
-    fig.colorbar(cp1, ax=ax)
-    ax.set_xlabel('kx (1/m)')
-    ax.set_ylabel('ky (1/m)')
-    ax.set_title(fr'Effective altitude {name} km')
-    ax.grid(True, linestyle=':', alpha=0.6)
+        fig.colorbar(
+            mesh,
+            ax=ax,
+            label=r"Growth rate $\mathrm{Im}(\omega)$ [s$^{-1}$]",
+        )
 
-    plt.tight_layout()
-    plt.savefig(os.path.join(PLOTS_DIR, f"TEST {name} km"), dpi=300)
+    ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
+    ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
+    ax.set_title(f"Eq. 73 — altitude {altitude:g} km")
+    plt.savefig("104.png")
+
+    fig.tight_layout()
     plt.show()
+
+    return omega_grid

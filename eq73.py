@@ -1,6 +1,6 @@
 from root import *
 
-def eq_70(omega, k_x, k_y, run):
+def eq_73(omega, k_x, k_y, run):
     # Recalculate dynamic constants based on the current run
     V_de_x = (E_0 / B_0) * kappa_e[run]**2 / (1 + kappa_e[run]**2)
     V_de_y = -(E_0 / B_0) * kappa_e[run] / (1 + kappa_e[run]**2)
@@ -65,7 +65,7 @@ def eq_70(omega, k_x, k_y, run):
     # terms down to O(1), allowing the Newton solver to converge smoothly.
     scaling_factor = k_sq * lambda_D_sq
     
-    return scaling_factor * (1.0 + chi_e - chi_i)
+    return scaling_factor * (1.0 + chi_e + chi_i)
 
 if __name__ == "__main__":
     for i in [4, 5]:
@@ -74,11 +74,11 @@ if __name__ == "__main__":
         ky_vals = np.linspace(-25, 25, pts)
 
         contour_plot(
-            lambda omega, kx, ky, run=i: eq_70(omega, kx, ky, run),
+            lambda omega, kx, ky, run=i: eq_73(omega, kx, ky, run),
             kx_vals,
             ky_vals,
             alt_eff[i],
             pts,
             run=i,
-            positive_only=True,
+            positive_only=False,
         )
