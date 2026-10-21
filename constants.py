@@ -73,4 +73,4 @@ T_x = anisotropy_ratio * T_y                            # Effective temperature 
 
 V_Tx = np.sqrt(T_x / m_i)                               # Thermal velocity x-component array (m/s)
 V_Ty = np.sqrt(T_y / m_i)                               # Thermal velocity y-component array (m/s)
-T_eff_i = m_i*(V_Tx**2+2*V_Ty**2)                       # Effective ion temperature array (J)
+T_eff_i = m_i * (2 * V_Tx**2 + V_Ty**2) / 3.0           # Effective ion temperature array (J)
