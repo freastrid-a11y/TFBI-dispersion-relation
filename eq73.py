@@ -59,8 +59,6 @@ def eq_73(omega, k_x, k_y, run):
     chi_i = chi_i_part1 * part2 * part3
 
     # --- NUMERICALLY SCALED DISPERSION RELATION ---
-    # The true Poisson sum is 1 + chi_e - chi_i = 0 (chi_i must be subtracted to
-    # cancel against chi_e in the k->0 fluid limit -- verified in eq70_dispersion_sign_convention.md).
     # Multiplying by (k^2 * lambda_D^2) brings all extremely large susceptibility 
     # terms down to O(1), allowing the Newton solver to converge smoothly.
     scaling_factor = k_sq * lambda_D_sq
