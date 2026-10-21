@@ -68,7 +68,7 @@ def eq_73(omega, k_x, k_y, run):
     return scaling_factor * (1.0 + chi_e + chi_i)
 
 if __name__ == "__main__":
-    for i in [4, 5]:
+    for i in [5]:
         pts = 100
         kx_vals = np.linspace(-15, 15, pts)
         ky_vals = np.linspace(-25, 25, pts)

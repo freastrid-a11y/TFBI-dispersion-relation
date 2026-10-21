@@ -67,7 +67,7 @@ V_Tn = np.sqrt(T_n / m_i)                               # Neutral thermal veloci
 # Heat is primarily generated along the Pedersen drift axis (y-axis)
 T_eff = T_n + (m_i * U0_mag**2) / 3.0                   # Effective temperature array (J)
 
-anisotropy_ratio = 0.5                                  # Anisotropy ratio (dimensionless)
+anisotropy_ratio = 1                                    # Anisotropy ratio (dimensionless) assume an isotropic ion temperature initially
 T_y = (3.0 * T_eff) / (1.0 + 2.0 * anisotropy_ratio)    # Effective temperature y-component array (J)
 T_x = anisotropy_ratio * T_y                            # Effective temperature x-component array (J)
 
