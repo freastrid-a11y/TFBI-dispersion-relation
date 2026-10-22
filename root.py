@@ -283,7 +283,7 @@ def contour_plot(
     ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
     ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
     ax.set_title(f"Eq. 73 — altitude {altitude:g} km")
-    plt.savefig("104.png")
+    plt.savefig("110_10xk_200pts.png")
 
     fig.tight_layout()
     plt.show()

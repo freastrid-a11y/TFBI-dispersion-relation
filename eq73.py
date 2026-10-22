@@ -66,10 +66,10 @@ def eq_73(omega, k_x, k_y, run):
     return scaling_factor * (1.0 + chi_e + chi_i)
 
 if __name__ == "__main__":
-    for i in [5]:
+    for i in [4]:
         pts = 100
-        kx_vals = np.linspace(-15, 15, pts)
-        ky_vals = np.linspace(-25, 25, pts)
+        kx_vals = np.linspace(-100, 100, pts)
+        ky_vals = np.linspace(-100, 100, pts)
 
         contour_plot(
             lambda omega, kx, ky, run=i: eq_73(omega, kx, ky, run),
@@ -77,5 +77,4 @@ if __name__ == "__main__":
             ky_vals,
             alt_eff[i],
             run=i,
-            positive_only=False,
         )
