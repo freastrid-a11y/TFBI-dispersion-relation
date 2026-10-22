@@ -1,8 +1,4 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from oldroot import *
-import matplotlib.pyplot as plt
 
 def eq_70(omega, k_x, k_y):
     # Static electron drift only (V_d), matching eq 2.46's assumptions

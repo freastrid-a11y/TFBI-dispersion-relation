@@ -1,6 +1,3 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from oldroot import *
 
 def eq_223(omega, k_x):
