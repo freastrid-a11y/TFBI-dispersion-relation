@@ -2,11 +2,11 @@ from root import *
 
 def eq_73(omega, k_x, k_y, run):
     # Recalculate dynamic constants based on the current run
-    V_de_x = (E_0 / B_0) * kappa_e[run]**2 / (1 + kappa_e[run]**2)
-    V_de_y = -(E_0 / B_0) * kappa_e[run] / (1 + kappa_e[run]**2)
+    V_de_x = (E_0 / B_0) #* kappa_e[run]**2 / (1 + kappa_e[run]**2)
+    V_de_y = 0#-(E_0 / B_0) * kappa_e[run] / (1 + kappa_e[run]**2)
 
     # Heat is primarily generated along the Pedersen drift axis (y-axis)
-    U0_mag_curr = (e * E_0) / (m_i * nu_i[run])
+    U0_mag_curr = 0 #(e * E_0) / (m_i * nu_i[run])
     U0_x_curr = 0
     U0_y_curr = U0_mag_curr
 
@@ -15,10 +15,10 @@ def eq_73(omega, k_x, k_y, run):
     T_y_curr = (3.0 * T_eff_i_curr) / (1.0 + 2.0 * anisotropy_ratio)
     T_x_curr = anisotropy_ratio * T_y_curr
 
-    V_Tx_curr = np.sqrt(T_x_curr / m_i)
-    V_Ty_curr = np.sqrt(T_y_curr / m_i)
+    V_Tx_curr = V_Tn#np.sqrt(T_x_curr / m_i)
+    V_Ty_curr = V_Tn#np.sqrt(T_y_curr / m_i)
 
-    a_i0_mag_curr = (e * E_0) / m_i
+    a_i0_mag_curr = 0#(e * E_0) / m_i
     a_i0_x_curr = 0.0
     a_i0_y_curr = a_i0_mag_curr
 
@@ -53,8 +53,14 @@ def eq_73(omega, k_x, k_y, run):
     # The denominator natively includes lambda_D_sq but no k^2 in the numerator, 
     # effectively evaluating the unnormalized ion susceptibility (chi_i)
     chi_i_part1 = V_Tn**2 / (lambda_D_sq * beta_T * den1)
-    part2 = 1.0 / (1.0 + (1j * nu_i[run] / sqrt_den1) * Z_tilde(z1))
-    part3 = 1.0 + ((omega_i - k_dot_U0) / sqrt_den2) * Z_tilde(z2)
+    Z1 = Z_tilde(z1, omega_i)
+    Z2 = Z_tilde(z2, omega_i)
+
+    part2 = 1.0 / (
+        1.0 + (1j * nu_i[run] / sqrt_den1) * Z1
+    )
+
+    part3 = 1.0 + z2 * Z2
     
     chi_i = chi_i_part1 * part2 * part3
 

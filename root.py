@@ -9,9 +9,23 @@ from scipy.special import wofz
 from constants import *
 
 
-def Z_tilde(z):
+def Z_tilde(z, omega_i):
+    """
+    Modified plasma dispersion function from manuscript Eq. (74).
+
+    The same omega_i determines the branch for both ion arguments.
+    The manuscript does not specify the value at Im(omega_i) = 0.
+    """
     with np.errstate(over="ignore", invalid="ignore"):
-        return 1j * np.sqrt(np.pi) * wofz(z)
+        if np.imag(omega_i) > 0.0:
+            # Z(z)
+            return 1j * np.sqrt(np.pi) * wofz(z)
+
+        if np.imag(omega_i) < 0.0:
+            # -Z(-z)
+            return -1j * np.sqrt(np.pi) * wofz(-z)
+
+        return complex(np.nan, np.nan)
 
 
 def frequency_scale(k_x, k_y, run):
@@ -283,7 +297,7 @@ def contour_plot(
     ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
     ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
     ax.set_title(f"Eq. 73 — altitude {altitude:g} km")
-    plt.savefig("110_10xk_200pts.png")
+    plt.savefig("110_zerodrift.png")
 
     fig.tight_layout()
     plt.show()
