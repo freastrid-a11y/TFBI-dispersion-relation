@@ -260,6 +260,30 @@ def contour_plot(
             f"row {iy + 1}/{len(ky_vals)}"
         )
 
+    # Build one CSV row for each grid point with an accepted root.
+    KX, KY = np.meshgrid(kx_vals, ky_vals)
+    growth = omega_grid.imag
+
+    valid = np.isfinite(omega_grid.real) & np.isfinite(growth)
+
+    # Match the plot option: export only growing roots if positive_only=True.
+    if positive_only:
+        valid &= growth > 0.0
+
+    data = np.column_stack((
+        KX[valid],
+        KY[valid],
+        growth[valid],
+    ))
+
+    np.savetxt(
+        f"growth_rate_{altitude:g}km.csv",
+        data,
+        delimiter=",",
+        header="kx_m^-1,ky_m^-1,growth_rate_s^-1",
+        comments="",
+    )
+
     growth = omega_grid.imag.copy()
 
     if positive_only:
@@ -297,7 +321,7 @@ def contour_plot(
     ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
     ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
     ax.set_title(f"Eq. 73 — altitude {altitude:g} km")
-    plt.savefig("110_zerodrift.png")
+    plt.savefig("110.png")
 
     fig.tight_layout()
     plt.show()

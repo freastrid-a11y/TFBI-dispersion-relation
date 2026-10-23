@@ -2,11 +2,11 @@ from root import *
 
 def eq_73(omega, k_x, k_y, run):
     # Recalculate dynamic constants based on the current run
-    V_de_x = (E_0 / B_0) #* kappa_e[run]**2 / (1 + kappa_e[run]**2)
-    V_de_y = 0#-(E_0 / B_0) * kappa_e[run] / (1 + kappa_e[run]**2)
+    V_de_x = (E_0 / B_0)* kappa_e[run]**2 / (1 + kappa_e[run]**2) # (E_0 / B_0)
+    V_de_y = -(E_0 / B_0) * kappa_e[run] / (1 + kappa_e[run]**2) # 0
 
     # Heat is primarily generated along the Pedersen drift axis (y-axis)
-    U0_mag_curr = 0 #(e * E_0) / (m_i * nu_i[run])
+    U0_mag_curr = (e * E_0) / (m_i * nu_i[run]) #0
     U0_x_curr = 0
     U0_y_curr = U0_mag_curr
 
@@ -15,10 +15,10 @@ def eq_73(omega, k_x, k_y, run):
     T_y_curr = (3.0 * T_eff_i_curr) / (1.0 + 2.0 * anisotropy_ratio)
     T_x_curr = anisotropy_ratio * T_y_curr
 
-    V_Tx_curr = V_Tn#np.sqrt(T_x_curr / m_i)
-    V_Ty_curr = V_Tn#np.sqrt(T_y_curr / m_i)
+    V_Tx_curr = np.sqrt(T_x_curr / m_i) # V_Tn
+    V_Ty_curr = np.sqrt(T_y_curr / m_i) # V_tn
 
-    a_i0_mag_curr = 0#(e * E_0) / m_i
+    a_i0_mag_curr = 0#(e * E_0) / m_i # 0
     a_i0_x_curr = 0.0
     a_i0_y_curr = a_i0_mag_curr
 
