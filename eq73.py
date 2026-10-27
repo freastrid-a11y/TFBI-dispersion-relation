@@ -72,15 +72,8 @@ def eq_73(omega, k_x, k_y, run):
     return scaling_factor * (1.0 + chi_e + chi_i)
 
 if __name__ == "__main__":
-    for i in [4]:
-        pts = 100
-        kx_vals = np.linspace(-100, 100, pts)
-        ky_vals = np.linspace(-100, 100, pts)
+    # See main.py for running a method (e.g. growth_contour) against this
+    # equation with cached CSV grid data.
+    import main
 
-        contour_plot(
-            lambda omega, kx, ky, run=i: eq_73(omega, kx, ky, run),
-            kx_vals,
-            ky_vals,
-            alt_eff[i],
-            run=i,
-        )
+    main.run(eq_73, "growth_contour", "growth_contour_116km.png", run=4)

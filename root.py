@@ -1,11 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
-
 from scipy.optimize import root
 from scipy.special import wofz
-
-# Exposes the constants to eq73.py through its existing:
-#     from root import *
 from constants import *
 
 
@@ -212,19 +207,14 @@ def find_roots(
     return sorted(accepted, key=lambda w: w.imag, reverse=True)
 
 
-def contour_plot(
-    dispersion,
-    kx_vals,
-    ky_vals,
-    altitude,
-    run=0,
-    positive_only=True,
-):
+def solve_grid(dispersion, kx_vals, ky_vals, run=0):
     """
-    Plot the largest growth rate found at each wave-vector grid point.
+    Solve for the accepted root with the largest Im(omega) at each
+    wave-vector grid point, continuing from already-solved neighbors.
 
     Assumes perturbations vary as exp(i*k·r - i*omega*t), so Im(omega) > 0
-    indicates growth.
+    indicates growth. Returns the complex omega grid with shape
+    (len(ky_vals), len(kx_vals)).
     """
     kx_vals = np.asarray(kx_vals, dtype=float)
     ky_vals = np.asarray(ky_vals, dtype=float)
@@ -255,75 +245,6 @@ def contour_plot(
             if roots:
                 omega_grid[iy, ix] = roots[0]
 
-        print(
-            f"Altitude {altitude:g} km: "
-            f"row {iy + 1}/{len(ky_vals)}"
-        )
-
-    # Build one CSV row for each grid point with an accepted root.
-    KX, KY = np.meshgrid(kx_vals, ky_vals)
-    growth = omega_grid.imag
-
-    valid = np.isfinite(omega_grid.real) & np.isfinite(growth)
-
-    # Match the plot option: export only growing roots if positive_only=True.
-    if positive_only:
-        valid &= growth > 0.0
-
-    data = np.column_stack((
-        KX[valid],
-        KY[valid],
-        growth[valid],
-    ))
-
-    np.savetxt(
-        f"growth_rate_{altitude:g}km.csv",
-        data,
-        delimiter=",",
-        header="kx_m^-1,ky_m^-1,growth_rate_s^-1",
-        comments="",
-    )
-
-    growth = omega_grid.imag.copy()
-
-    if positive_only:
-        growth[growth <= 0.0] = np.nan
-
-    growth = np.ma.masked_invalid(growth)
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-
-    if growth.count() == 0:
-        ax.text(
-            0.5,
-            0.5,
-            "No accepted unstable roots found"
-            if positive_only else "No accepted roots found",
-            ha="center",
-            va="center",
-            transform=ax.transAxes,
-        )
-    else:
-        mesh = ax.pcolormesh(
-            kx_vals,
-            ky_vals,
-            growth,
-            shading="auto",
-            cmap="viridis",
-        )
-
-        fig.colorbar(
-            mesh,
-            ax=ax,
-            label=r"Growth rate $\mathrm{Im}(\omega)$ [s$^{-1}$]",
-        )
-
-    ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
-    ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
-    ax.set_title(f"Eq. 73 — altitude {altitude:g} km")
-    plt.savefig("110.png")
-
-    fig.tight_layout()
-    plt.show()
+        print(f"run {run}: row {iy + 1}/{len(ky_vals)}", flush=True)
 
     return omega_grid
