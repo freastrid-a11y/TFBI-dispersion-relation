@@ -134,10 +134,13 @@ def load_field_grid(path, column="growth_rate_s^-1"):
     return pivot.columns.to_numpy(), pivot.index.to_numpy(), pivot.to_numpy()
 
 
-def plot_field_difference(path_nonzero, path_zero, save_path, column="growth_rate_s^-1"):
-    """Contour of path_nonzero minus path_zero (e.g. a_i0 != 0 vs a_i0 == 0), color scale symmetric about the max |difference|.
+def plot_field_difference(path_nonzero, path_zero, save_path, column="growth_rate_s^-1", percentile=95):
+    """Contour of path_nonzero minus path_zero (e.g. a_i0 != 0 vs a_i0 == 0), color scale symmetric about a percentile of |difference|.
 
-    Assumes both CSVs were sampled on the same kx/ky grid.
+    Assumes both CSVs were sampled on the same kx/ky grid. A handful of
+    outlier points (e.g. near resonances) can otherwise dominate the max
+    |diff| and wash out the rest of the plot, so the scale is clipped to
+    `percentile` of |diff| with the colorbar marking the clipped extremes.
     """
     kx_vals, ky_vals, grid_nonzero = load_field_grid(path_nonzero, column)
     kx_vals_zero, ky_vals_zero, grid_zero = load_field_grid(path_zero, column)
@@ -146,16 +149,24 @@ def plot_field_difference(path_nonzero, path_zero, save_path, column="growth_rat
         raise ValueError("kx/ky grids differ between the two files; cannot take a pointwise difference.")
 
     diff = grid_nonzero - grid_zero
-    vmax = max(float(np.nanmax(np.abs(diff))), 1e-12)
+    abs_diff = np.abs(diff)
+    finite_abs_diff = abs_diff[np.isfinite(abs_diff)]
+    if finite_abs_diff.size == 0:
+        raise ValueError("No finite difference values to plot.")
+
+    vmax = max(float(np.nanpercentile(finite_abs_diff, percentile)), 1e-12)
+    actual_max = float(np.nanmax(finite_abs_diff))
     norm = TwoSlopeNorm(vmin=-vmax, vcenter=0.0, vmax=vmax)
 
     fig, ax = plt.subplots(figsize=(8, 6))
     mesh = ax.pcolormesh(kx_vals, ky_vals, diff, shading="auto", cmap="RdBu_r", norm=norm)
-    fig.colorbar(mesh, ax=ax, label=rf"$\Delta$ {column}")
+    fig.colorbar(mesh, ax=ax, extend="both", label=rf"$\Delta$ {column}")
 
     ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
     ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
-    ax.set_title(f"{column} difference (a_i0$\\neq$0 minus a_i0=0), max |diff| = {vmax:.3g}")
+    ax.set_title(
+        f"{column} difference (a_i0$\\neq$0 minus a_i0=0),",
+    )
     fig.tight_layout()
     fig.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -163,7 +174,5 @@ def plot_field_difference(path_nonzero, path_zero, save_path, column="growth_rat
 
 
 if __name__ == "__main__":
-    for path in FILES:
-        print(path, max_ratio(path))
-        save_path = "plots/" + path.split("/")[-1].replace(".csv", "_ratio.png")
-        plot_ratio_contour(path, save_path)
+    plot_field_difference("data/104.csv", "data/104_ai0zero.csv", "plots/difference_104")
+    plot_field_difference("data/110.csv", "data/110_ai0zero.csv", "plots/difference_110")

@@ -11,12 +11,13 @@ import argparse
 import numpy as np
 
 from constants import alt_eff
-from eq73 import eq_73
+from eq73 import eq_73, eq_73_ai0zero
 from grid_cache import get_grid
 from methods import METHODS
 
 EQUATIONS = {
     "eq_73": eq_73,
+    "eq_73_ai0zero": eq_73_ai0zero,
 }
 
 

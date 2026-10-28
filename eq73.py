@@ -1,6 +1,6 @@
 from root import *
 
-def eq_73(omega, k_x, k_y, run):
+def eq_73(omega, k_x, k_y, run, a_i0_enabled=True):
     # Recalculate dynamic constants based on the current run
     V_de_x = (E_0 / B_0)* kappa_e[run]**2 / (1 + kappa_e[run]**2) # (E_0 / B_0)
     V_de_y = -(E_0 / B_0) * kappa_e[run] / (1 + kappa_e[run]**2) # 0
@@ -18,7 +18,7 @@ def eq_73(omega, k_x, k_y, run):
     V_Tx_curr = np.sqrt(T_x_curr / m_i) # V_Tn
     V_Ty_curr = np.sqrt(T_y_curr / m_i) # V_tn
 
-    a_i0_mag_curr = 0#(e * E_0) / m_i # 0
+    a_i0_mag_curr = (e * E_0) / m_i if a_i0_enabled else 0.0
     a_i0_x_curr = 0.0
     a_i0_y_curr = a_i0_mag_curr
 
@@ -70,6 +70,11 @@ def eq_73(omega, k_x, k_y, run):
     scaling_factor = k_sq * lambda_D_sq
     
     return scaling_factor * (1.0 + chi_e + chi_i)
+
+
+def eq_73_ai0zero(omega, k_x, k_y, run):
+    """eq_73 with a_i0 forced to zero, for a_i0-on vs a_i0-off comparisons."""
+    return eq_73(omega, k_x, k_y, run, a_i0_enabled=False)
 
 if __name__ == "__main__":
     # See main.py for running a method (e.g. growth_contour) against this
