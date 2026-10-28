@@ -92,7 +92,7 @@ def growth_damping(kx_vals, ky_vals, growth, frequency, altitude, save_path):
     print(f"Saved figure: {save_path}")
 
 
-def growth_contour(kx_vals, ky_vals, growth, frequency, altitude, save_path, positive_only=True):
+def growth_contour(kx_vals, ky_vals, growth, frequency, altitude, save_path, positive_only=False):
     """Single-panel growth-rate (Im(omega)) contour."""
     data = growth.copy()
 

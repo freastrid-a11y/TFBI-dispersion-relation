@@ -21,7 +21,7 @@ EQUATIONS = {
 
 
 def run(equation, method, save_path, run=5, kx_min=-100.0, kx_max=100.0,
-        ky_min=-100.0, ky_max=100.0, points=100, force=False):
+        ky_min=-100.0, ky_max=100.0, points=100, force=False, csv_name=None):
     dispersion = EQUATIONS[equation] if isinstance(equation, str) else equation
     method_fn = METHODS[method]
 
@@ -29,7 +29,7 @@ def run(equation, method, save_path, run=5, kx_min=-100.0, kx_max=100.0,
     ky_vals = np.linspace(ky_min, ky_max, points)
 
     kx_vals, ky_vals, growth, frequency = get_grid(
-        dispersion, kx_vals, ky_vals, run, force=force
+        dispersion, kx_vals, ky_vals, run, force=force, csv_name=csv_name
     )
 
     method_fn(kx_vals, ky_vals, growth, frequency, alt_eff[run], save_path)
@@ -50,6 +50,10 @@ def main():
         "--force", action="store_true",
         help="Recompute the grid even if a cached CSV already exists",
     )
+    parser.add_argument(
+        "--csv-name", default=None,
+        help="Name for the cached grid CSV in data/ (default: auto-generated from equation/run/grid)",
+    )
     args = parser.parse_args()
 
     run(
@@ -63,6 +67,7 @@ def main():
         ky_max=args.ky_max,
         points=args.points,
         force=args.force,
+        csv_name=args.csv_name,
     )
 
 

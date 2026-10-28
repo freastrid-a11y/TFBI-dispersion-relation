@@ -48,7 +48,7 @@ def _sources_mtime(dispersion):
     return max(os.path.getmtime(p) for p in paths if os.path.exists(p))
 
 
-def get_grid(dispersion, kx_vals, ky_vals, run, data_dir=DATA_DIR, force=False):
+def get_grid(dispersion, kx_vals, ky_vals, run, data_dir=DATA_DIR, force=False, csv_name=None):
     """
     Return (kx_vals, ky_vals, growth, frequency) for this exact setup.
 
@@ -56,13 +56,14 @@ def get_grid(dispersion, kx_vals, ky_vals, run, data_dir=DATA_DIR, force=False):
     solves the grid and writes it out. growth and frequency are 2D arrays
     with shape (len(ky_vals), len(kx_vals)) holding Im(omega) and Re(omega).
     force=True always recomputes, regardless of staleness.
+    csv_name overrides the auto-generated filename (still placed in data_dir).
     """
     kx_vals = np.asarray(kx_vals, dtype=float)
     ky_vals = np.asarray(ky_vals, dtype=float)
     shape = (len(ky_vals), len(kx_vals))
 
     os.makedirs(data_dir, exist_ok=True)
-    path = csv_path(dispersion, kx_vals, ky_vals, run, data_dir)
+    path = os.path.join(data_dir, csv_name) if csv_name else csv_path(dispersion, kx_vals, ky_vals, run, data_dir)
     exists = os.path.exists(path)
 
     stale = exists and _sources_mtime(dispersion) > os.path.getmtime(path)
