@@ -11,7 +11,7 @@ e = 1.6e-19                                             # Elementary charge (C)
 eps_0 = 8.854e-12                                       # Vacuum permittivity (F/m)
 delta_en = 3e-3                                         # Electron energy loss fraction (dimensionless)
 
-B_0 = 5e-05                                          # Static magnetic field (T)
+B_0 = 5e-05                                             # Static magnetic field (T)
 V_d = 2100                                              # Drift velocity (m/s)
 E_0 = V_d * B_0                                         # Background electric field (V/m)
 

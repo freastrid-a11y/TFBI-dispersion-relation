@@ -155,18 +155,14 @@ def plot_field_difference(path_nonzero, path_zero, save_path, column="growth_rat
         raise ValueError("No finite difference values to plot.")
 
     vmax = max(float(np.nanpercentile(finite_abs_diff, percentile)), 1e-12)
-    actual_max = float(np.nanmax(finite_abs_diff))
     norm = TwoSlopeNorm(vmin=-vmax, vcenter=0.0, vmax=vmax)
 
     fig, ax = plt.subplots(figsize=(8, 6))
     mesh = ax.pcolormesh(kx_vals, ky_vals, diff, shading="auto", cmap="RdBu_r", norm=norm)
-    fig.colorbar(mesh, ax=ax, extend="both", label=rf"$\Delta$ {column}")
+    fig.colorbar(mesh, ax=ax, extend="both", label=rf"$\Delta$ Im($\omega$)")
 
     ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
     ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
-    ax.set_title(
-        f"{column} difference (a_i0$\\neq$0 minus a_i0=0),",
-    )
     fig.tight_layout()
     fig.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
