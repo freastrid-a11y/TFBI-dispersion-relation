@@ -12,7 +12,7 @@ eps_0 = 8.854e-12                                       # Vacuum permittivity (F
 delta_en = 3e-3                                         # Electron energy loss fraction (dimensionless)
 
 B_0 = 5e-05                                          # Static magnetic field (T)
-V_d = 2100                                              # Drift velocity (m/s)
+V_d = 4200                                              # Drift velocity (m/s)
 E_0 = V_d * B_0                                         # Background electric field (V/m)
 
 gamma = 1.0                                             # Isothermal assumption for electrons / Polytropic index (dimensionless)
@@ -52,7 +52,7 @@ kappa = kappa_e                                         # Alias for electron mag
 Psi_0 = 1 / (kappa_i * kappa_e)                         # Driving parameter Psi_0 array (dimensionless)
 
 # Electron drift (V_d) is on the x-axis, so Electric Field (E_0) is on the y-axis.
-a_i0_mag = (e * E_0) / m_i                              # Acceleration vector magnitude (m/s^2)
+a_i0_mag = 0#(e * E_0) / m_i                              # Acceleration vector magnitude (m/s^2)
 a_i0_x = 0.0                                            # Acceleration vector x-component (m/s^2)
 a_i0_y = a_i0_mag                                       # Acceleration vector y-component (m/s^2)
 

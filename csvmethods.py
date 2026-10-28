@@ -11,7 +11,7 @@ from constants import alt_eff, nu_i
 
 FILES = [
     "data/104.csv",
-    "data/110_smallk.csv",
+    "data/110.csv",
 ]
 
 
@@ -121,6 +121,41 @@ def plot_ratio_contour(path, save_path, band_frac=0.2):
     ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
     ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
     ax.set_title(f"Growth/frequency ratio (|max| = {vmax:.3g})")
+    fig.tight_layout()
+    fig.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved figure: {save_path}")
+
+
+def load_field_grid(path, column="growth_rate_s^-1"):
+    """Return (kx_vals, ky_vals, grid) pivoted from the long-format CSV for the given column."""
+    df = pd.read_csv(path)
+    pivot = df.pivot(index="ky_m^-1", columns="kx_m^-1", values=column)
+    return pivot.columns.to_numpy(), pivot.index.to_numpy(), pivot.to_numpy()
+
+
+def plot_field_difference(path_nonzero, path_zero, save_path, column="growth_rate_s^-1"):
+    """Contour of path_nonzero minus path_zero (e.g. a_i0 != 0 vs a_i0 == 0), color scale symmetric about the max |difference|.
+
+    Assumes both CSVs were sampled on the same kx/ky grid.
+    """
+    kx_vals, ky_vals, grid_nonzero = load_field_grid(path_nonzero, column)
+    kx_vals_zero, ky_vals_zero, grid_zero = load_field_grid(path_zero, column)
+
+    if not (np.array_equal(kx_vals, kx_vals_zero) and np.array_equal(ky_vals, ky_vals_zero)):
+        raise ValueError("kx/ky grids differ between the two files; cannot take a pointwise difference.")
+
+    diff = grid_nonzero - grid_zero
+    vmax = max(float(np.nanmax(np.abs(diff))), 1e-12)
+    norm = TwoSlopeNorm(vmin=-vmax, vcenter=0.0, vmax=vmax)
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    mesh = ax.pcolormesh(kx_vals, ky_vals, diff, shading="auto", cmap="RdBu_r", norm=norm)
+    fig.colorbar(mesh, ax=ax, label=rf"$\Delta$ {column}")
+
+    ax.set_xlabel(r"$k_x$ [m$^{-1}$]")
+    ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
+    ax.set_title(f"{column} difference (a_i0$\\neq$0 minus a_i0=0), max |diff| = {vmax:.3g}")
     fig.tight_layout()
     fig.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
