@@ -2,24 +2,37 @@ name: Deploy Docs
 on:
   push:
     branches:
-      - main # or master, depending on your default branch
+      - main
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.output.url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+          
       - name: Install dependencies
         run: pip install mkdocs-material
-      - name: Build and Deploy
-        run: mkdocs gh-deploy --force
+        
+      - name: Build site
+        run: mkdocs build
+        
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
