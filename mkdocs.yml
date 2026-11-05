@@ -1,4 +1,5 @@
 site_name: TFBI Solver Documentation
+site_url: https://freastrid-a11y.github.io/TFBI-dispersion-relation/
 theme:
   name: material
 nav:
