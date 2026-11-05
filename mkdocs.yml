@@ -2,5 +2,25 @@ site_name: TFBI Solver Documentation
 site_url: https://freastrid-a11y.github.io/TFBI-dispersion-relation/
 theme:
   name: material
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 nav:
   - Home: index.md
+  - Core Solver:
+      - Dispersion Relation (eq73): eq73.md
+      - Root Finding (root): root.md
+      - Constants (constants): constants.md
+  - Pipeline:
+      - CLI Entry Point (main): main.md
+      - Grid Cache (grid_cache): grid_cache.md
+  - Visualization:
+      - Plotting Methods (methods): methods.md
+      - CSV Post-Processing (csvmethods): csvmethods.md
