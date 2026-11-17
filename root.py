@@ -110,7 +110,7 @@ def find_roots(
     if not seeds:
         seeds = default_guesses(k_x, k_y, run, scale)
 
-    # eq_73 already multiplies its Poisson sum by k^2 * lambda_D_sq.
+    # dispersion_rel already multiplies its Poisson sum by k^2 * lambda_D_sq.
     # Use an additional FIXED normalization so the solver tolerance remains
     # meaningful across different k values.
     k_sq = max(k_x**2 + k_y**2, 1e-12)

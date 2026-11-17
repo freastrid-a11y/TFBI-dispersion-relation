@@ -18,6 +18,7 @@ Example:
 """
 
 import argparse
+import inspect
 import os
 import subprocess
 import sys
@@ -78,6 +79,13 @@ def _run_variant(variant, run, method, points, k_max):
 
     import main  # imported only now, after E_SCALE is set
 
+    # Only plot positive growth rates (masking gamma <= 0) whenever the
+    # chosen method supports it (e.g. growth_contour).
+    positive_only = "positive_only" in inspect.signature(METHODS[method]).parameters
+    if not positive_only:
+        print(f"note: method '{method}' does not support positive-only masking; "
+              "plotting all values.", flush=True)
+
     altitude = RUNS[run]
     os.makedirs(PLOTS_DIR, exist_ok=True)
 
@@ -93,6 +101,7 @@ def _run_variant(variant, run, method, points, k_max):
         points=points,
         force=True,
         csv_name=f"{altitude}{csv_suffix}.csv",
+        positive_only=positive_only,
     )
 
 
