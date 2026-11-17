@@ -13,12 +13,17 @@ import numpy as np
 
 from constants import alt_eff
 from dispersion_rel import dispersion_rel, dispersion_rel_ai0zero
+from electron_kinetic import eq_72_kinetic, eq_72_kinetic_ae0zero, eq_72_kinetic_ai0zero
 from grid_cache import get_grid
 from methods import METHODS
 
 EQUATIONS = {
     "dispersion_rel": dispersion_rel,
     "dispersion_rel_ai0zero": dispersion_rel_ai0zero,
+    # Kinetic ions + fully KINETIC electrons (manuscript Eqs. 72, 75)
+    "eq_72_kinetic": eq_72_kinetic,
+    "eq_72_kinetic_ae0zero": eq_72_kinetic_ae0zero,   # electrons in NTA limit (a_e0 = 0)
+    "eq_72_kinetic_ai0zero": eq_72_kinetic_ai0zero,
 }
 
 

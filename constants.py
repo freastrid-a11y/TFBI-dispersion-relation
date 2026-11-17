@@ -1,3 +1,4 @@
+import os
 import numpy as np
 
 NR_MAX_ITER = 140                                       # Maximum Newton-Raphson iterations (dimensionless)
@@ -12,14 +13,14 @@ eps_0 = 8.854e-12                                       # Vacuum permittivity (F
 delta_en = 3e-3                                         # Electron energy loss fraction (dimensionless)
 
 B_0 = 5e-05                                          # Static magnetic field (T)
-V_d = 2100                                              # Drift velocity (m/s)
+E_SCALE = float(os.environ.get("E_SCALE", "1.0"))       # E-field multiplier set by replot_variants.py
+V_d = 2100 * E_SCALE                                    # Drift velocity (m/s)
 E_0 = V_d * B_0                                         # Background electric field (V/m)
 
 gamma = 1.0                                             # Isothermal assumption for electrons / Polytropic index (dimensionless)
 k_B = 1.380649e-23                                      # Boltzmann constant (J/K)
 T_n = 300 * k_B                                         # Ion/Neutral temperature (J)
 T_e = T_n + (2 * m_e * E_0**2) / (3 * delta_en * B_0**2)# Electron temperature (J)
-print(T_e/T_n)
 C_s_squared = (T_n + gamma * T_e) / m_i                 # Ion acoustic speed squared (m^2/s^2)
 k_y = 0.0                                               # Wave vector perpendicular to drift (m^-1)
 V_th = np.sqrt(T_n/m_i)                                 # Thermal velocity (m/s)
