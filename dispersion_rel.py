@@ -50,9 +50,12 @@ def dispersion_rel(omega, k_x, k_y, run, a_i0_enabled=True):
     sqrt_den2 = np.sqrt(2 * den2)
     z2 = (omega_i - k_dot_U0) / sqrt_den2
 
-    # The denominator natively includes lambda_D_sq but no k^2 in the numerator, 
-    # effectively evaluating the unnormalized ion susceptibility (chi_i)
-    chi_i_part1 = V_Tn**2 / (lambda_D_sq * beta_T * den1)
+    # The denominator natively includes lambda_D_sq but no k^2 in the numerator,
+    # effectively evaluating the unnormalized ion susceptibility (chi_i).
+    # NOTE: prefactor uses den2 (bi-Maxwellian temperatures), as in manuscript
+    # Eq. (15). Eq. (73) as printed has den1 here, which is a typo: an
+    # independent derivation (validation/independent_ion.py) confirms Eq. (15).
+    chi_i_part1 = V_Tn**2 / (lambda_D_sq * beta_T * den2)
     Z1 = Z_tilde(z1, omega_i)
     Z2 = Z_tilde(z2, omega_i)
 

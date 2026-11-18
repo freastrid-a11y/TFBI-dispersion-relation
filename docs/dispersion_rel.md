@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the core mathematical module of the solver. It implements the kinetic-ion / fluid-electron dispersion relation for the **Thermal Farley-Buneman Instability (TFBI)** — manuscript Eq. (73) — for a weakly ionized, magnetized E-region plasma driven by a background electric field $E_0$ perpendicular to $B_0$.
+This is the core mathematical module of the solver. It implements the kinetic-ion / fluid-electron dispersion relation for the **Thermal Farley-Buneman Instability (TFBI)** — manuscript Eq. (73) — for a weakly ionized, magnetized E-region plasma driven by a background electric field $E_0$ perpendicular to $B_0$. (For the version with **fully kinetic electrons**, manuscript Eq. 72/75, see [`electron_kinetic.py`](electron_kinetic.md).)
 
 The dispersion relation is the Poisson condition
 
@@ -62,6 +62,9 @@ Evaluate the scaled TFBI dispersion residual $k^2\lambda_D^2\,(1 + \chi_e + \chi
   $\chi_e = \omega_{pe}^2 / \bigl[-i\omega\nu_e(1+\kappa_e^2) + \gamma (T_e/m_e)k^2 + i\nu_e(1+\kappa_e^2)\,\mathbf{k}\cdot\mathbf{V}_{de}\bigr]$.
 - The ion term combines $\tilde{Z}(z_1)$ (collision/BGK correction) and $\tilde{Z}(z_2)$ (drifting, anisotropic Maxwellian) via
   $\chi_i \propto \dfrac{1}{1 + \frac{i\nu_i}{\sqrt{2\,\mathrm{den}_1}}\tilde Z(z_1)} \bigl(1 + z_2 \tilde Z(z_2)\bigr)$.
+
+!!! note "Eq. (73) prefactor typo"
+    The $\chi_i$ prefactor uses $\mathrm{den}_2$ (the bi-Maxwellian denominator $k_x^2 V_{Tx}^2 + k_y^2 V_{Ty}^2 + i\,\mathbf{k}\cdot\mathbf{a}_{i0}$), as in manuscript Eq. (15). Eq. (73) as printed has $\mathrm{den}_1$ there, which is a typo confirmed by an independent derivation. [`electron_kinetic.I_ion`](electron_kinetic.md) applies the same correction.
 
 ### `dispersion_rel_ai0zero(omega, k_x, k_y, run)`
 

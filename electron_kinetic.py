@@ -129,7 +129,7 @@ def I_ion(omega, k_x, k_y, run, a_i0_enabled=True):
     den2 = k_x**2 * V_Tx_sq + k_y**2 * V_Ty_sq + 1j * k_dot_a
     s2 = np.sqrt(2.0 * den2)
 
-    first = k_sq * V_Tn**2 / (beta_T * den1)
+    first = k_sq * V_Tn**2 / (beta_T * den2)   # Eq. (15); Eq. (73)'s den1 is a typo
     second = 1.0 / (1.0 + 1j * nu / s1 * Z_tilde(omega_i / s1, omega_i))
     z2 = (omega_i - k_dot_U0) / s2
     third = 1.0 + z2 * Z_tilde(z2, omega_i)

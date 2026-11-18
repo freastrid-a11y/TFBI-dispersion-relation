@@ -14,7 +14,7 @@ This module defines every physical constant and derived parameter used by the so
 ### Key physics
 
 - **Electron heating.** The electron temperature includes ohmic heating balanced by inelastic losses:
-  $T_e = T_n + \dfrac{2 m_e E_0^2}{3\,\delta_{en} B_0^2}$, with energy-loss fraction $\delta_{en} = 3\times10^{-3}$. (The module prints $T_e/T_n$ at import time as a sanity check.)
+  $T_e = T_n + \dfrac{2 m_e E_0^2}{3\,\delta_{en} B_0^2}$, with energy-loss fraction $\delta_{en} = 3\times10^{-3}$.
 - **Collision profile fit.** $\psi(h)$ is a two-exponential analytic fit smoothly switching around 120 km; from it,
   $\kappa_i = \Theta_0/\sqrt{\psi}$, $\kappa_e = 1/(\Theta_0\sqrt{\psi})$, $\nu_{i,e} = \Omega_{i,e}/\kappa_{i,e}$, and $\Psi_0 = 1/(\kappa_i\kappa_e)$.
 - **Frictional ion heating.** $T_\mathrm{eff} = T_n + m_i U_0^2/3$, partitioned by `anisotropy_ratio` into $T_x = r\,T_y$ and $T_y = 3T_\mathrm{eff}/(1+2r)$ (currently $r = 1$: isotropic).
@@ -35,7 +35,8 @@ This module defines every physical constant and derived parameter used by the so
 | `k_B` | `1.380649e-23` | J/K | Boltzmann constant |
 | `delta_en` | `3e-3` | — | Electron energy-loss fraction |
 | `B_0` | `5e-5` | T | Background magnetic field |
-| `V_d` | `2100` | m/s | Electron $\mathbf{E}\times\mathbf{B}$ drift speed |
+| `E_SCALE` | env var, default `1.0` | — | E-field multiplier read from the `E_SCALE` environment variable (set by [`replot_variants.py`](replot_variants.md) for doubled-field runs) |
+| `V_d` | `2100 * E_SCALE` | m/s | Electron $\mathbf{E}\times\mathbf{B}$ drift speed |
 | `E_0` | `V_d * B_0` | V/m | Background electric field |
 | `gamma` | `1.0` | — | Electron polytropic index (isothermal) |
 | `T_n` | `300 k_B` | J | Neutral/ion background temperature |
