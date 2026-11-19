@@ -16,6 +16,7 @@ nav:
   - Home: index.md
   - Core Solver:
       - Dispersion Relation (dispersion_rel): dispersion_rel.md
+      - Reduced Dispersion Relation (dispersion_rel_reduced): dispersion_rel_reduced.md
       - Kinetic Electrons (electron_kinetic): electron_kinetic.md
       - Root Finding (root): root.md
       - Constants (constants): constants.md

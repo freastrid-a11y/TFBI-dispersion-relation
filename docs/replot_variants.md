@@ -10,6 +10,11 @@ Script that regenerates the hand-named CSV grids in `data/` and the correspondin
 | `ai0zero` | `dispersion_rel_ai0zero` | ×1 | `data/<alt>_ai0zero.csv` | `plots/<alt>_ai0zero.png` |
 | `doubleE` | `dispersion_rel` | ×2 | `data/<alt>_doubleE.csv` | `plots/<alt>_double_E.png` |
 | `doubleE_ai0zero` | `dispersion_rel_ai0zero` | ×2 | `data/<alt>_doubleE_ai0zero.csv` | `plots/<alt>_double_E_ai0zero.png` |
+| `reduced` | `dispersion_rel_reduced` | ×1 | `data/<alt>_reduced.csv` | `plots/<alt>_reduced.png` |
+| `reduced_ai0zero` | `dispersion_rel_reduced` | ×1 | `data/<alt>_reduced_ai0zero.csv` | `plots/<alt>_reduced_ai0zero.png` |
+| `reduced_doubleE` | `dispersion_rel_reduced` | ×2 | `data/<alt>_reduced_doubleE.csv` | `plots/<alt>_reduced_double_E.png` |
+
+The `reduced*` variants use [`dispersion_rel_reduced.py`](dispersion_rel_reduced.md) (fluid electrons, ion term with the $i\,\mathbf{k}\cdot\mathbf{a}_{i0}$ terms dropped). Since that equation no longer contains $\mathbf{a}_{i0}$, `reduced_ai0zero` solves the same equation as `reduced` and exists only for filename parity with the full set.
 
 `<alt>` is the altitude in km: run 4 → `110`, run 5 → `104` (the `RUNS` map).
 
@@ -33,7 +38,7 @@ Spawn one worker subprocess per (run, variant) combination. `runs` / `variants` 
 |---|---|---|
 | `--method NAME` | `growth_contour` | Plotting method from [`methods.py`](methods.md). |
 | `--runs N [N ...]` | `4 5` | alt_eff indices (4 = 110 km, 5 = 104 km). |
-| `--variants NAME [NAME ...]` | all four | Subset of `VARIANTS`. |
+| `--variants NAME [NAME ...]` | all seven | Subset of `VARIANTS`. |
 | `--points N` | `100` | Grid resolution per axis. |
 | `--k-max X` | `100.0` | Grid spans ±`k_max` in $k_x$ and $k_y$ (m⁻¹). |
 
@@ -48,4 +53,5 @@ python replot_variants.py                          # everything, both altitudes
 python replot_variants.py --variants doubleE       # just the doubled field
 python replot_variants.py --points 20              # coarse grid for a quick look
 python replot_variants.py --method growth_damping  # two-panel Im/Re plots instead
+python replot_variants.py --variants reduced reduced_ai0zero reduced_doubleE  # reduced equation only
 ```

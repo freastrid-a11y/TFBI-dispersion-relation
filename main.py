@@ -13,6 +13,7 @@ import numpy as np
 
 from constants import alt_eff
 from dispersion_rel import dispersion_rel, dispersion_rel_ai0zero
+from dispersion_rel_reduced import dispersion_rel_reduced
 from electron_kinetic import eq_72_kinetic, eq_72_kinetic_ae0zero, eq_72_kinetic_ai0zero
 from grid_cache import get_grid
 from methods import METHODS
@@ -20,6 +21,8 @@ from methods import METHODS
 EQUATIONS = {
     "dispersion_rel": dispersion_rel,
     "dispersion_rel_ai0zero": dispersion_rel_ai0zero,
+    # Fluid electrons + ion term with the i k.a_i0 terms dropped (no a_i0 left)
+    "dispersion_rel_reduced": dispersion_rel_reduced,
     # Kinetic ions + fully KINETIC electrons (manuscript Eqs. 72, 75)
     "eq_72_kinetic": eq_72_kinetic,
     "eq_72_kinetic_ae0zero": eq_72_kinetic_ae0zero,   # electrons in NTA limit (a_e0 = 0)

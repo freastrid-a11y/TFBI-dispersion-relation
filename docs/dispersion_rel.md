@@ -76,6 +76,9 @@ Convenience wrapper: `dispersion_rel` with `a_i0_enabled=False`. Registered as a
 
 **Returns:** `complex` — scaled dispersion residual with $\mathbf{a}_{i0} = 0$.
 
+!!! note "Relation to `dispersion_rel_reduced`"
+    Since $\mathbf{a}_{i0}$ enters this relation only through the $i\,\mathbf{k}\cdot\mathbf{a}_{i0}$ denominators, this wrapper returns exactly the same values as [`dispersion_rel_reduced.py`](dispersion_rel_reduced.md), which drops those terms explicitly but is cached and plotted under its own `*_reduced*` filenames.
+
 ---
 
 ## Usage Examples

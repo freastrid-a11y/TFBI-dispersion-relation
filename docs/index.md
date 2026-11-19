@@ -14,6 +14,7 @@ python main.py --method growth_damping --save output.png --run 5
 | Module | Role |
 |---|---|
 | [dispersion_rel](dispersion_rel.md) | The TFBI dispersion relation with fluid electrons (manuscript Eq. 73) — the core math. |
+| [dispersion_rel_reduced](dispersion_rel_reduced.md) | Reduced variant: same fluid electrons, ion term with the $i\,\mathbf{k}\cdot\mathbf{a}_{i0}$ terms dropped. |
 | [electron_kinetic](electron_kinetic.md) | Fully kinetic electron contribution and the full kinetic dispersion relation (Eqs. 67, 70, 72, 75). |
 | [root](root.md) | Modified plasma dispersion function, multistart root finder, grid sweep. |
 | [constants](constants.md) | Physical constants and altitude-dependent parameter arrays. |
@@ -21,5 +22,5 @@ python main.py --method growth_damping --save output.png --run 5
 | [grid_cache](grid_cache.md) | Solves each grid once and caches it as CSV in `data/`. |
 | [methods](methods.md) | Plotting methods (growth, frequency, ratio, phase velocity). |
 | [csvmethods](csvmethods.md) | Post-processing of cached CSVs (resonance bands, a_i0 differences). |
-| [replot_variants](replot_variants.md) | Batch script regenerating all variant grids/plots (normal, a_i0 = 0, doubled E-field). |
+| [replot_variants](replot_variants.md) | Batch script regenerating all variant grids/plots (normal, a_i0 = 0, doubled E-field, reduced equation). |
 | [compare_electrons](compare_electrons.md) | Script comparing fluid vs. fully kinetic electrons on the same k-grid. |

@@ -6,6 +6,14 @@ Regenerate the cached CSV grids and replot every variant:
   doubleE          dispersion_rel with E_0 doubled        -> data/<alt>_doubleE.csv,         plots/<alt>_double_E.png
   doubleE_ai0zero  E_0 doubled and a_i0 = 0      -> data/<alt>_doubleE_ai0zero.csv, plots/<alt>_double_E_ai0zero.png
 
+Reduced-equation variants (dispersion_rel_reduced: fluid electrons, ion term
+with the i k.a_i0 terms dropped; a_i0 no longer appears, so its "ai0zero"
+variant is the same equation and is provided only for filename parity):
+
+  reduced                  -> data/<alt>_reduced.csv,                 plots/<alt>_reduced.png
+  reduced_ai0zero          -> data/<alt>_reduced_ai0zero.csv,         plots/<alt>_reduced_ai0zero.png
+  reduced_doubleE          -> data/<alt>_reduced_doubleE.csv,         plots/<alt>_reduced_double_E.png
+
 Each variant runs in its own subprocess so that doubling the electric field
 (via the E_SCALE environment variable read by constants.py) consistently
 rescales every derived constant (T_e, lambda_D, drifts, a_i0, ...), exactly
@@ -34,6 +42,11 @@ VARIANTS = {
     "ai0zero": ("dispersion_rel_ai0zero", 1.0, "_ai0zero", "_ai0zero"),
     "doubleE": ("dispersion_rel", 2.0, "_doubleE", "_double_E"),
     "doubleE_ai0zero": ("dispersion_rel_ai0zero", 2.0, "_doubleE_ai0zero", "_double_E_ai0zero"),
+    # dispersion_rel_reduced contains no a_i0 at all, so its ai0zero variant
+    # uses the same equation (kept for filename parity with the full set).
+    "reduced": ("dispersion_rel_reduced", 1.0, "_reduced", "_reduced"),
+    "reduced_ai0zero": ("dispersion_rel_reduced", 1.0, "_reduced_ai0zero", "_reduced_ai0zero"),
+    "reduced_doubleE": ("dispersion_rel_reduced", 2.0, "_reduced_doubleE", "_reduced_double_E"),
 }
 
 # alt_eff index -> altitude (km), used in CSV/plot filenames
