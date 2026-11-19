@@ -14,6 +14,13 @@ variant is the same equation and is provided only for filename parity):
   reduced_ai0zero          -> data/<alt>_reduced_ai0zero.csv,         plots/<alt>_reduced_ai0zero.png
   reduced_doubleE          -> data/<alt>_reduced_doubleE.csv,         plots/<alt>_reduced_double_E.png
 
+Fully kinetic-electron variants (eq_72_kinetic / eq_72_kinetic_ai0zero):
+
+  normalkinetic            -> data/<alt>kinetic.csv,                  plots/<alt>kinetic.png
+  ai0zerokinetic           -> data/<alt>_ai0zerokinetic.csv,          plots/<alt>_ai0zerokinetic.png
+  doubleEkinetic           -> data/<alt>_doubleEkinetic.csv,          plots/<alt>_double_Ekinetic.png
+  doubleE_ai0zerokinetic   -> data/<alt>_doubleE_ai0zerokinetic.csv,  plots/<alt>_double_E_ai0zerokinetic.png
+
 Each variant runs in its own subprocess so that doubling the electric field
 (via the E_SCALE environment variable read by constants.py) consistently
 rescales every derived constant (T_e, lambda_D, drifts, a_i0, ...), exactly
@@ -38,6 +45,10 @@ PLOTS_DIR = os.path.join(HERE, "plots")
 
 # variant name -> (equation in main.EQUATIONS, E-field scale, csv suffix, plot suffix)
 VARIANTS = {
+    "normalkinetic": ("eq_72_kinetic", 1.0, "kinetic", "kinetic"),
+    "ai0zerokinetic": ("eq_72_kinetic_ai0zero", 1.0, "_ai0zerokinetic", "_ai0zerokinetic"),
+    "doubleEkinetic": ("eq_72_kinetic", 2.0, "_doubleEkinetic", "_double_Ekinetic"),
+    "doubleE_ai0zerokinetic": ("eq_72_kinetic_ai0zero", 2.0, "_doubleE_ai0zerokinetic", "_double_E_ai0zerokinetic"),
     "normal": ("dispersion_rel", 1.0, "", ""),
     "ai0zero": ("dispersion_rel_ai0zero", 1.0, "_ai0zero", "_ai0zero"),
     "doubleE": ("dispersion_rel", 2.0, "_doubleE", "_double_E"),

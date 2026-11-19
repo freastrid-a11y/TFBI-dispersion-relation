@@ -22,5 +22,6 @@ python main.py --method growth_damping --save output.png --run 5
 | [grid_cache](grid_cache.md) | Solves each grid once and caches it as CSV in `data/`. |
 | [methods](methods.md) | Plotting methods (growth, frequency, ratio, phase velocity). |
 | [csvmethods](csvmethods.md) | Post-processing of cached CSVs (resonance bands, a_i0 differences). |
-| [replot_variants](replot_variants.md) | Batch script regenerating all variant grids/plots (normal, a_i0 = 0, doubled E-field, reduced equation). |
+| [replot_variants](replot_variants.md) | Batch script regenerating all variant grids/plots (normal, a_i0 = 0, doubled E-field, reduced equation, kinetic electrons). |
+| [fourpanel](fourpanel.md) | Four-panel figure comparing old (reduced) vs. new (kinetic Eq. 72) growth rates at E_0 and 2E_0. |
 | [compare_electrons](compare_electrons.md) | Script comparing fluid vs. fully kinetic electrons on the same k-grid. |

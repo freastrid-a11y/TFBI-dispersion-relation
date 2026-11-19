@@ -64,7 +64,7 @@ def first_quadrant_quartic_root(q4):
 
 
 def electron_params(omega, k_x, k_y, run, k_par=0.0, a_e0_enabled=True):
-    """Return the building blocks D1, D2, alpha0, alpha1, q4 of Eqs. (67)."""
+    """Return the building blocks D1, alpha0, alpha1, q4 of Eqs. (67)."""
     kappa = kappa_e[run]
     nu_mean = nu_e[run]                    # <nu_en>
     nu_0 = nu_mean / 3.0                   # Eq. (30)
@@ -79,15 +79,14 @@ def electron_params(omega, k_x, k_y, run, k_par=0.0, a_e0_enabled=True):
     k_dot_a = k_y * a_e0                   # a_e0 along +y (E_0 direction)
 
     k_perp_sq = k_x**2 + k_y**2            # paper's "k_y^2" in the electron part
-    D1 = k_perp_sq * V_Te_sq - 2j * k_dot_a              # k_y^2 V_Te^2 - 2i k.a_e0
-    D2 = D1 - a_e0**2 / V_Te_sq                           # ... - a_e0^2/V_Te^2
+    D1 = k_perp_sq * V_Te_sq - 1j * k_dot_a              # k_y^2 V_Te^2 - i k.a_e0                          # ... - a_e0^2/V_Te^2
 
     alpha1 = 5j * k_dot_a / D1                                            # (67a)
     alpha0 = k_par**2 * V_Te_sq * Omega_e**2 / (4.0 * nu_0**2 * D1)       # (67b)
     q4 = -((3j * nu_0 * Delta + k_par**2 * V_Te_sq) * Omega_e**2
-           / (4.0 * nu_0**2 * D2))                                        # (67c)
+           / (4.0 * nu_0**2 * D1))                                        # (67c)
 
-    return dict(D1=D1, D2=D2, alpha0=alpha0, alpha1=alpha1, q4=q4,
+    return dict(D1=D1, alpha0=alpha0, alpha1=alpha1, q4=q4,
                 nu_0=nu_0, Delta=Delta, V_Te_sq=V_Te_sq, a_e0=a_e0,
                 k_dot_a=k_dot_a)
 
@@ -101,7 +100,7 @@ def I_electron(omega, k_x, k_y, run, k_par=0.0, a_e0_enabled=True):
     bracket = (1.0 + 2.0 * a1
                + (q4 + a0 + a1 * q0**2) / q0 * Z(q0)
                - 1j * (q4 + a0 - a1 * q0**2) / q0 * Z(1j * q0))
-    return p["D1"] / p["D2"] * bracket
+    return p["D1"] * bracket
 
 
 def I_ion(omega, k_x, k_y, run, a_i0_enabled=True):

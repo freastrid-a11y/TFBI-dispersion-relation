@@ -28,4 +28,5 @@ nav:
       - CSV Post-Processing (csvmethods): csvmethods.md
   - Scripts:
       - Variant Replotting (replot_variants): replot_variants.md
+      - Four-Panel Comparison (fourpanel): fourpanel.md
       - Fluid vs Kinetic Electrons (compare_electrons): compare_electrons.md
