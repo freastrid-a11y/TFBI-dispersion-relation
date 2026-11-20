@@ -12,12 +12,13 @@ def Dvec(w, kx, ky, p):
     s1 = np.sqrt(2*(k2*p['VTn2']+1j*ka)); d2 = kx**2*p['VTx2']+ky**2*p['VTy2']+1j*ka; s2=np.sqrt(2*d2)
     z2 = (wi-ky*p['U0'])/s2
     Iion = k2*p['VTn2']/(p['betaT']*d2)*(1+z2*I.Z(z2))/(1+1j*p['nu_i']/s1*I.Z(wi/s1))
-    kae = ky*p['ae0']; A = k2*p['VTe2']-2j*kae; Bd = A-p['ae0']**2/p['VTe2']
-    Dw = kx*p['Vex']+ky*p['Vey']-w; a1 = 5j*kae/A
-    q4 = -(3j*p['nu0']*Dw)*I.Om_e**2/(4*p['nu0']**2*Bd)
+    # electrons: Eq. (75) bracket, definitions from paper lines 1086-1088 (k_par = 0)
+    kae = ky*p['ae0']; den = k2*p['VTe2']-1j*kae
+    Dw = kx*p['Vex']+ky*p['Vey']-w; a1 = 5j*kae/(2*den)
+    q4 = -(3j*p['nu0']*Dw)*I.Om_e**2/(4*p['nu0']**2*den)
     r = q4[None]**0.25*np.array([1,1j,-1,-1j])[:,None]
     q = np.take_along_axis(r, np.argmax(np.minimum(r.real,r.imag),0)[None],0)[0]
-    Iel = A/Bd*(1+2*a1+(q4+a1*q*q)/q*I.Z(q)-1j*(q4-a1*q*q)/q*I.Z(1j*q))
+    Iel = 1+2*a1+(q4+a1*q*q)/q*I.Z(q)-1j*(q4-a1*q*q)/q*I.Z(1j*q)
     return Iion+Iel+k2*p['lD2']
 
 def winding(f, corners, n=4000):
@@ -68,14 +69,15 @@ def fine_seeds(kx, ky, p, gmin=1.0):
 
 
 def repair(om, cnt, nf, ks, p, passes=20):
-    """Where the argument principle counted more unstable roots than were found,
+    """Where the argument principle counted more unstable roots than were found
+    (or the count itself did not converge),
     re-seed Newton from neighbours, from the mirror point -k
     (omega(-k) = -conj(omega(k))), and finally from a denser seed grid.
     Repeats until nothing changes, so fixes propagate along a missed edge."""
     n = len(ks)
     for _ in range(passes):
         changed = False
-        for iy, ix in np.argwhere(cnt > nf):
+        for iy, ix in np.argwhere((cnt > nf) | np.isnan(cnt)):   # NaN = winding count did not converge
             kx, ky = ks[ix], ks[iy]
             f = lambda w: Dvec(w, kx, ky, p)
             seeds = [om[iy+a, ix+b] for a in (-1, 0, 1) for b in (-1, 0, 1)

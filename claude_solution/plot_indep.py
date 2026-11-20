@@ -74,8 +74,14 @@ def main():
 
         both = np.isfinite(mine) & np.isfinite(theirs)
         rel = np.where(both, np.abs(om - repo) / np.abs(om), np.nan)
+        # Data-driven log colour limits: a fixed range (e.g. 1e-16..1e-11)
+        # saturates when the solutions differ more than expected, making the
+        # difference look artificially constant.
+        finite = rel[np.isfinite(rel) & (rel > 0)]
+        norm = (LogNorm(finite.min(), finite.max()) if finite.size
+                else LogNorm(1e-16, 1e-11))
         m = axes[2].pcolormesh(k, k, np.ma.masked_invalid(rel), cmap="Greys",
-                               norm=LogNorm(1e-16, 1e-11), shading="auto")
+                               norm=norm, shading="auto")
         plt.colorbar(m, ax=axes[2], label=r"$|\omega_{\rm indep}-\omega_{\rm repo}|/|\omega|$")
         for mask, colour, lab in ((np.isfinite(mine) & ~np.isfinite(theirs), "#d62728", "unstable only in independent"),
                                   (~np.isfinite(mine) & np.isfinite(theirs), "#1f77b4", "unstable only in repo")):

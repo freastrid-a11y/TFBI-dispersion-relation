@@ -50,23 +50,22 @@ Compute the building blocks of Eqs. (67a–c).
 | `k_par` | `float` | Field-aligned wave number (paper's electron "$k_x$"). Default `0`. |
 | `a_e0_enabled` | `bool` | If `False`, sets $a_{e0} = 0$ (NTA limit). Default `True`. |
 
-**Returns:** `dict` with keys `D1`, `D2`, `alpha0`, `alpha1`, `q4`, `nu_0`, `Delta`, `V_Te_sq`, `a_e0`, `k_dot_a`, where
+**Returns:** `dict` with keys `D1`, `alpha0`, `alpha1`, `q4`, `nu_0`, `Delta`, `V_Te_sq`, `a_e0`, `k_dot_a`, where
 
 $$
-D_1 = k_\perp^2 V_{Te}^2 - 2i\,\mathbf{k}\cdot\mathbf{a}_{e0}, \qquad
-D_2 = D_1 - a_{e0}^2/V_{Te}^2,
+D_1 = 2\left(k_\perp^2 V_{Te}^2 - i\,\mathbf{k}\cdot\mathbf{a}_{e0}\right),
 $$
 
-$\alpha_1 = 5i\,\mathbf{k}\cdot\mathbf{a}_{e0}/D_1$ (67a), $\alpha_0 = k_\parallel^2 V_{Te}^2\,\Omega_e^2/(4\nu_0^2 D_1)$ (67b), and $q^4 = -(3i\nu_0\Delta_{\omega k} + k_\parallel^2 V_{Te}^2)\,\Omega_e^2/(4\nu_0^2 D_2)$ (67c).
+$\alpha_1 = 5i\,\mathbf{k}\cdot\mathbf{a}_{e0}/(2 D_1)$ (67a), $\alpha_0 = k_\parallel^2 V_{Te}^2\,\Omega_e^2/(4\nu_0^2 D_1)$ (67b), and $q^4 = -(3i\nu_0\Delta_{\omega k} + k_\parallel^2 V_{Te}^2)\,\Omega_e^2/(4\nu_0^2 D_1)$ (67c).
 
 ### `I_electron(omega, k_x, k_y, run, k_par=0.0, a_e0_enabled=True)`
 
-Kinetic electron contribution $I_\mathrm{electron}$, manuscript Eq. (75):
+Kinetic electron contribution $I_\mathrm{electron}$, manuscript Eq. (75) — the bracket alone, with no $D_1/D_2$ prefactor:
 
 $$
-I_e = \frac{D_1}{D_2}\left[1 + 2\alpha_1
+I_e = 1 + 2\alpha_1
 + \frac{q^4 + \alpha_0 + \alpha_1 q_0^2}{q_0}\,Z(q_0)
-- i\,\frac{q^4 + \alpha_0 - \alpha_1 q_0^2}{q_0}\,Z(iq_0)\right].
+- i\,\frac{q^4 + \alpha_0 - \alpha_1 q_0^2}{q_0}\,Z(iq_0).
 $$
 
 **Returns:** `complex` (or array, broadcasting over the inputs).

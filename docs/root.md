@@ -13,7 +13,7 @@ This module turns the dispersion residual from [`dispersion_rel.py`](dispersion_
    - **independently verifies** each candidate: finite residual below `residual_tol`, estimated remaining Newton correction below `correction_tol`, and $|\omega|$ within `max_frequency_factor` of the scale (rejects spurious convergence at huge $|\omega|$);
    - merges duplicates reached from different seeds.
 
-3. **A continuation-based grid sweep** (`solve_grid`) that marches through the $(k_x, k_y)$ grid, seeding each point with the converged roots of its already-solved neighbors so the selected branch varies smoothly. After the sweep, repeated **neighbor passes** re-seed every stable point that touches an unstable one — by following the unstable neighbor's root over in small k-steps (`_follow_root`) and, on symmetric grids, from the mirror root $\omega(-\mathbf{k}) = -\omega^*(\mathbf{k})$ — recovering growing branches the multistart search missed (e.g. the rectangular blocked-out regions seen in 104 km double-E runs).
+3. **A continuation-based grid sweep** (`solve_grid`) that marches through the $(k_x, k_y)$ grid, seeding each point with the converged roots of its already-solved neighbors so the selected branch varies smoothly.
 
 With the convention $\exp(i\mathbf{k}\cdot\mathbf{r} - i\omega t)$, $\mathrm{Im}(\omega) > 0$ is **growth** and $\mathrm{Re}(\omega)$ is the real wave frequency.
 
@@ -76,38 +76,15 @@ Find accepted roots of `dispersion(omega, k_x, k_y, run) = 0` at one wave vector
 !!! note
     This is a *local, multistart* solver — it is not a proof that all roots were found.
 
-### `_follow_root(dispersion, run, omega, k_from, k_to, substeps=8)`
-
-Follow a known root from wave vector `k_from` to `k_to` by re-solving with `find_roots` at `substeps` intermediate k-steps, each seeded only with the previous step's root. At every step the nearest returned root is taken, and the branch is declared lost (returns `None`) if no root is found or the nearest one jumps by more than 25% of $\max(|\omega|, 1)$.
-
-| Argument | Type | Description |
-|---|---|---|
-| `dispersion` | `callable` | Dispersion residual. |
-| `run` | `int` | Altitude index. |
-| `omega` | `complex` | Known root at `k_from`. |
-| `k_from`, `k_to` | `(float, float)` | Start and end wave vectors $(k_x, k_y)$ (m⁻¹). |
-| `substeps` | `int` | Number of intermediate continuation steps. Default `8`. |
-
-**Returns:** `complex` — the root at `k_to`, or `None` if the branch was lost.
-
-### `solve_grid(dispersion, kx_vals, ky_vals, run=0, max_passes=20, substeps=8)`
+### `solve_grid(dispersion, kx_vals, ky_vals, run=0)`
 
 Sweep a wave-vector grid, keeping the root with the largest $\mathrm{Im}(\omega)$ at each point and seeding each point from its left and lower neighbors (branch continuation). Prints one progress line per row.
-
-After the sweep, **neighbor passes** patch points where the multistart search returned only a damped root even though a growing branch exists. Each pass visits every stable/unsolved point adjacent to an unstable one and gathers candidate roots:
-
-* from each of the (up to 8) unstable neighbors, by `_follow_root`-ing that neighbor's root to this point;
-* from the mirror point via $\omega(-\mathbf{k}) = -\omega^*(\mathbf{k})$, when the grid is symmetric about $k = 0$.
-
-A point is updated only if a candidate passes the usual `find_roots` acceptance tests *and* has a larger $\mathrm{Im}(\omega)$ than the current value. Passes repeat (printing the number of improved points) until nothing changes or `max_passes` is reached.
 
 | Argument | Type | Description |
 |---|---|---|
 | `dispersion` | `callable` | Dispersion residual, e.g. `dispersion_rel`. |
 | `kx_vals`, `ky_vals` | `array_like` of `float` | 1-D grids of wave numbers (m⁻¹). |
 | `run` | `int` | Altitude index. Default `0`. |
-| `max_passes` | `int` | Maximum number of neighbor passes. Default `20`. |
-| `substeps` | `int` | Continuation steps used by `_follow_root` within a pass. Default `8`. |
 
 **Returns:** `ndarray[complex]` of shape `(len(ky_vals), len(kx_vals))` — the dominant root $\omega$ at each grid point; `nan+nan*j` where no root was accepted.
 

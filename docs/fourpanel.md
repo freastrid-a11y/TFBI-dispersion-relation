@@ -8,10 +8,10 @@ Standalone plotting script producing a 2×2 growth-rate figure for one altitude,
 |---|---|
 | Old terms, $E_0$ | `<alt>_reduced.csv` |
 | Old terms, $2E_0$ | `<alt>_reduced_doubleE.csv` |
-| New terms (Eq. 72), $E_0$ | `<alt>_kinetic.csv` |
-| New terms (Eq. 72), $2E_0$ | `<alt>_kinetic_doubleE.csv` |
+| New terms, $E_0$ | `<alt>_kinetic.csv` |
+| New terms, $2E_0$ | `<alt>_kinetic_doubleE.csv` |
 
-It is a pure **post-processing** script: it only reads cached CSV grids (regenerate them with [`replot_variants.py`](replot_variants.md) first) and plots the unstable region ($\gamma > 0$; everything else is masked). Each panel's title reports the maximum growth rate and the wave vector where it occurs. By default all four panels share one colour scale so they can be compared directly.
+It is a pure **post-processing** script: it only reads cached CSV grids (regenerate them with [`replot_variants.py`](replot_variants.md) first) and plots the unstable region ($\gamma > 0$; everything else is masked). By default all four panels share one colour scale so they can be compared directly.
 
 The script makes **one figure per invocation** for a single altitude (`--alt`, default `110`); run it once per altitude to get both.
 

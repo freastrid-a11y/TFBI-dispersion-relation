@@ -26,8 +26,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PANELS = [  # (row, col, csv suffix, title)
     (0, 0, "_reduced", r"Old terms, $E_0$"),
     (0, 1, "_reduced_doubleE", r"Old terms, $2E_0$"),
-    (1, 0, "_kinetic", r"New terms (Eq. 72), $E_0$"),
-    (1, 1, "_kinetic_doubleE", r"New terms (Eq. 72), $2E_0$"),
+    (1, 0, "_kinetic", r"New terms, $E_0$"),
+    (1, 1, "_kinetic_doubleE", r"New terms, $2E_0$"),
 ]
 
 
@@ -57,8 +57,7 @@ def main():
         mesh = ax.pcolormesh(kx, ky, np.ma.masked_invalid(g), cmap="viridis", vmin=0, vmax=hi, shading="auto")
         if a.separate_scales:
             fig.colorbar(mesh, ax=ax, label=r"Growth rate $\mathrm{Im}(\omega)$ [s$^{-1}$]")
-        i = np.unravel_index(np.nanargmax(g), g.shape)
-        ax.set_title(f"{title}\n" + r"max $\gamma$ = %.0f s$^{-1}$ at $k$ = (%.0f, %.0f) m$^{-1}$" % (g[i], kx[i[1]], ky[i[0]]),
+        ax.set_title(f"{title}\n",
                      fontsize=10)
         ax.set_aspect("equal")
         if r == 1:
@@ -67,7 +66,7 @@ def main():
             ax.set_ylabel(r"$k_y$ [m$^{-1}$]")
     if not a.separate_scales:
         fig.colorbar(mesh, ax=axes, shrink=0.8, label=r"Growth rate $\mathrm{Im}(\omega)$ [s$^{-1}$]")
-    fig.suptitle(f"Growth rate, altitude {a.alt} km (unstable roots only)")
+    fig.suptitle(f"Growth rate, effective altitude {a.alt} km")
 
     save = a.save or os.path.join(HERE, "plots", f"four_panel_{a.alt}.png")
     fig.savefig(save, dpi=200)

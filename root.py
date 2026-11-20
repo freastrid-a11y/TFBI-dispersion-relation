@@ -207,32 +207,7 @@ def find_roots(
     return sorted(accepted, key=lambda w: w.imag, reverse=True)
 
 
-def _follow_root(dispersion, run, omega, k_from, k_to, substeps=8):
-    """
-    Follow a root from k_from to k_to in small k-steps, re-solving with
-    find_roots at each step. Returns the root at k_to, or None if it is lost.
-    """
-    for t in np.linspace(0.0, 1.0, substeps + 1)[1:]:
-        kx = (1.0 - t) * k_from[0] + t * k_to[0]
-        ky = (1.0 - t) * k_from[1] + t * k_to[1]
-
-        roots = find_roots(
-            dispersion, kx, ky, run,
-            guesses=[omega], include_default_guesses=False,
-        )
-        if not roots:
-            return None
-
-        # Stay on the same branch: take the root closest to the previous one.
-        nearest = min(roots, key=lambda w: abs(w - omega))
-        if abs(nearest - omega) > 0.25 * max(abs(omega), 1.0):
-            return None
-        omega = nearest
-
-    return omega
-
-
-def solve_grid(dispersion, kx_vals, ky_vals, run=0, max_passes=20, substeps=8):
+def solve_grid(dispersion, kx_vals, ky_vals, run=0):
     """
     Solve for the accepted root with the largest Im(omega) at each
     wave-vector grid point, continuing from already-solved neighbors.
@@ -240,28 +215,13 @@ def solve_grid(dispersion, kx_vals, ky_vals, run=0, max_passes=20, substeps=8):
     Assumes perturbations vary as exp(i*k·r - i*omega*t), so Im(omega) > 0
     indicates growth. Returns the complex omega grid with shape
     (len(ky_vals), len(kx_vals)).
-
-    After the row-by-row sweep, the multistart search can still have returned
-    a damped root where a growing one exists (e.g. the rectangular block-out
-    seen in 104 km double-E runs). Neighbor passes then re-seed every stable
-    point that touches an unstable one:
-
-      * from each unstable neighbor (all 8), by following that neighbor's
-        root to this point in `substeps` small k-steps;
-      * from the mirror point, omega(-k) = -conj(omega(k)), when the grid
-        is symmetric about k = 0.
-
-    A point is updated only if this gives an accepted root (same find_roots
-    tests) with a larger Im(omega). Passes repeat until nothing changes, at
-    most max_passes times.
     """
     kx_vals = np.asarray(kx_vals, dtype=float)
     ky_vals = np.asarray(ky_vals, dtype=float)
 
-    ny, nx = len(ky_vals), len(kx_vals)
-    omega_grid = np.full((ny, nx), np.nan + 1j * np.nan, dtype=complex)
+    shape = (len(ky_vals), len(kx_vals))
+    omega_grid = np.full(shape, np.nan + 1j * np.nan, dtype=complex)
 
-    # --- Sweep: row by row, seeded from the left and lower neighbors ---
     for iy, ky in enumerate(ky_vals):
         for ix, kx in enumerate(kx_vals):
             continuation_seeds = []
@@ -285,68 +245,6 @@ def solve_grid(dispersion, kx_vals, ky_vals, run=0, max_passes=20, substeps=8):
             if roots:
                 omega_grid[iy, ix] = roots[0]
 
-        print(f"run {run}: row {iy + 1}/{ny}", flush=True)
-
-    # --- Neighbor passes: re-seed stable points from unstable neighbors ---
-    symmetric = (np.allclose(kx_vals, -kx_vals[::-1])
-                 and np.allclose(ky_vals, -ky_vals[::-1]))
-
-    for n_pass in range(max_passes):
-        unstable = np.isfinite(omega_grid) & (omega_grid.imag > 0.0)
-        snapshot = omega_grid.copy()
-        improved = 0
-
-        for iy in range(ny):
-            for ix in range(nx):
-                if unstable[iy, ix]:
-                    continue
-
-                neighbors = [
-                    (iy + dy, ix + dx)
-                    for dy in (-1, 0, 1) for dx in (-1, 0, 1)
-                    if (dy or dx)
-                    and 0 <= iy + dy < ny and 0 <= ix + dx < nx
-                    and unstable[iy + dy, ix + dx]
-                ]
-                mirror = symmetric and unstable[ny - 1 - iy, nx - 1 - ix]
-
-                if not neighbors and not mirror:
-                    continue
-
-                kx, ky = kx_vals[ix], ky_vals[iy]
-                candidates = []
-
-                if mirror:
-                    seed = -np.conj(snapshot[ny - 1 - iy, nx - 1 - ix])
-                    candidates += find_roots(
-                        dispersion, kx, ky, run,
-                        guesses=[seed], include_default_guesses=False,
-                    )
-
-                for jy, jx in neighbors:
-                    followed = _follow_root(
-                        dispersion, run, snapshot[jy, jx],
-                        (kx_vals[jx], ky_vals[jy]), (kx, ky), substeps,
-                    )
-                    if followed is not None:
-                        candidates += find_roots(
-                            dispersion, kx, ky, run,
-                            guesses=[followed], include_default_guesses=False,
-                        )
-
-                if not candidates:
-                    continue
-
-                best = max(candidates, key=lambda w: w.imag)
-                current = omega_grid[iy, ix].imag if np.isfinite(omega_grid[iy, ix]) else -np.inf
-
-                if best.imag > current + 1e-9 * abs(best):
-                    omega_grid[iy, ix] = best
-                    improved += 1
-
-        print(f"run {run}: neighbor pass {n_pass + 1}: {improved} points improved", flush=True)
-
-        if improved == 0:
-            break
+        print(f"run {run}: row {iy + 1}/{len(ky_vals)}", flush=True)
 
     return omega_grid

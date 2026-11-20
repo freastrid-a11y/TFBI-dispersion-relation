@@ -1,7 +1,9 @@
 """
 Independent implementation of Dimant et al. kinetic TFBI dispersion relation, Eq. (72),
-written from the manuscript (not from the repo code), with the ion prefactor
-denominator taken from Eq. (15) (bi-Maxwellian k_x^2 V_Tx^2 + k_y^2 V_Ty^2 + i k.a_i0).
+written from the manuscript (11/19/2026 version), not from the repo code.
+Ions: Eq. (73) (prefactor denominator k_x^2 V_Tx^2 + k_y^2 V_Ty^2 + i k.a_i0).
+Electrons: Eq. (75), the bracket alone, with alpha_1 and q from paper lines
+1086-1088 (common denominator k_perp^2 V_Te^2 - i k.a_e0, no -a_e0^2/V_Te^2).
 
 Frame used here (same as the repo so grids can be compared point by point):
   E0 along +y, B along +z, E x B drift V0 along +x.
@@ -68,16 +70,15 @@ def D(w, kx, ky, p):
     z2 = (wi - ky * p['U0']) / s2
     Iion = (k2 * p['VTn2'] / (p['betaT'] * d2)
             * (1 + z2 * Zt(z2, wi)) / (1 + 1j * p['nu_i'] / s1 * Zt(wi / s1, wi)))
-    # ---------- electrons, Eqs. (67), (69)/(75), k_par = 0 ----------
+    # ---------- electrons, Eq. (75) with the definitions listed after it
+    # (paper lines 1086-1088, 11/19/2026 version), k_par = 0 ----------
     kae = ky * p['ae0']
     VTe2, nu0 = p['VTe2'], p['nu0']
-    A = k2 * VTe2 - 2j * kae
-    Bd = A - p['ae0']**2 / VTe2
-    Dw = kx * p['Vex'] + ky * p['Vey'] - w
-    a1 = 5j * kae / A
-    a0 = 0.0
-    q4 = -(3j * nu0 * Dw) * Om_e**2 / (4 * nu0**2 * Bd)
+    den = k2 * VTe2 - 1j * kae                 # k_perp^2 V_Te^2 - i k.a_e0
+    Dw = kx * p['Vex'] + ky * p['Vey'] - w     # Delta_wk = k.V_e0 - omega
+    a1 = 5j * kae / (2 * den)                  # alpha_1, with 1/2 factor
+    q4 = -(3j * nu0 * Dw) * Om_e**2 / (4 * nu0**2 * den)   # q^4 (k_par = 0, so alpha_0 = 0)
     q = q_first_quadrant(q4)
-    Iel = A / Bd * (1 + 2 * a1 + (q4 + a0 + a1 * q * q) / q * Z(q)
-                    - 1j * (q4 + a0 - a1 * q * q) / q * Z(1j * q))
+    Iel = (1 + 2 * a1 + (q4 + a1 * q * q) / q * Z(q)
+           - 1j * (q4 - a1 * q * q) / q * Z(1j * q))
     return Iion + Iel + k2 * p['lD2']
