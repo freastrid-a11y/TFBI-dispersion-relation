@@ -1,0 +1,30 @@
+site_name: TFBI Solver Documentation
+site_url: https://freastrid-a11y.github.io/TFBI-dispersion-relation/
+theme:
+  name: material
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+nav:
+  - Home: index.md
+  - Core Solver:
+      - Dispersion Relation (dispersion_rel): dispersion_rel.md
+      - Reduced Dispersion Relation (dispersion_rel_reduced): dispersion_rel_reduced.md
+      - Kinetic Electrons (electron_kinetic): electron_kinetic.md
+      - Root Finding (root): root.md
+      - Constants (constants): constants.md
+  - Pipeline:
+      - CLI Entry Point (main): main.md
+  - Visualization:
+      - Plotting Methods (methods): methods.md
+      - CSV Post-Processing (csvmethods): csvmethods.md
+  - Scripts:
+      - Variant Replotting (replot_variants): replot_variants.md
+      - Four-Panel Comparison (fourpanel): fourpanel.md
